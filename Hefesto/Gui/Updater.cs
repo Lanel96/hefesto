@@ -63,7 +63,8 @@ public static class Updater
     }
     static int[] Parse(string v)
     {
-        var parts = v.Split('.', '-', '+')[0].Split('.');
+        var clean = v.Split('-', '+')[0]; // quita sufijo git "-4ba..." y metadata
+        var parts = clean.Split('.');
         var r = new int[3];
         for (int i = 0; i < Math.Min(3, parts.Length); i++) int.TryParse(parts[i], out r[i]);
         return r;
