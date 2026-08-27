@@ -69,47 +69,80 @@ public static class Updater
         return r;
     }
 
+    static string LogPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "hefesto.log");
+    static void Log(string m) { try { File.AppendAllText(LogPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [Updater] {m}{Environment.NewLine}"); } catch { } }
+
     public static async Task DownloadAndInstallAsync(string downloadUrl, string latestVersion, IProgress<int>? progress = null)
     {
+        Log($"Descargando v{latestVersion} desde {downloadUrl}");
         var tempPath = Path.Combine(Path.GetTempPath(), $"Hefesto_{latestVersion}.exe");
-        using var http = new HttpClient();
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("Hefesto-Updater");
-        using var resp = await http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
-        resp.EnsureSuccessStatusCode();
-        var total = resp.Content.Headers.ContentLength ?? -1L;
-        using var stream = await resp.Content.ReadAsStreamAsync();
-        using var file = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        var buffer = new byte[81920];
-        long readTotal = 0;
-        int read;
-        while ((read = await stream.ReadAsync(buffer)) > 0)
+        try
         {
-            await file.WriteAsync(buffer.AsMemory(0, read));
-            readTotal += read;
-            if (total > 0 && progress != null) progress.Report((int)(readTotal * 100 / total));
+            using var http = new HttpClient();
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("Hefesto-Updater");
+            using var resp = await http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+            resp.EnsureSuccessStatusCode();
+            var total = resp.Content.Headers.ContentLength ?? -1L;
+            Log($"Total bytes: {total}");
+            using var stream = await resp.Content.ReadAsStreamAsync();
+            using var file = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            var buffer = new byte[81920];
+            long readTotal = 0;
+            int read;
+            while ((read = await stream.ReadAsync(buffer)) > 0)
+            {
+                await file.WriteAsync(buffer.AsMemory(0, read));
+                readTotal += read;
+                if (total > 0 && progress != null) progress.Report((int)(readTotal * 100 / total));
+            }
+            Log($"Descarga completa {readTotal} bytes -> {tempPath} exists={File.Exists(tempPath)}");
+        }
+        catch (Exception ex)
+        {
+            Log($"Descarga FAIL: {ex}");
+            throw;
         }
 
-        // Crear script .bat que reemplaza el exe actual después de cerrar
         var currentExe = Application.ExecutablePath;
+        var currentDir = Path.GetDirectoryName(currentExe) ?? AppDomain.CurrentDomain.BaseDirectory;
         var batPath = Path.Combine(Path.GetTempPath(), "hefesto_update.bat");
+        var logBat = Path.Combine(currentDir, "hefesto_update.log");
+        // bat robusto: espera a que el proceso salga, reintenta copia hasta 5 veces
         var bat = $"""
 @echo off
-echo Actualizando Hefesto a v{latestVersion}...
-timeout /t 2 /nobreak >nul
-copy /y "{tempPath}" "{currentExe}" >nul
+echo [%date% %time%] Actualizando a v{latestVersion} >> "{logBat}"
+echo Esperando cierre de Hefesto... >> "{logBat}"
+timeout /t 3 /nobreak >nul
+:loop
+tasklist /FI "IMAGENAME eq Hefesto.exe" 2>nul | find /I "Hefesto.exe" >nul
+if %errorlevel%==0 (
+  echo Proceso aun activo, esperando... >> "{logBat}"
+  timeout /t 1 /nobreak >nul
+  goto loop
+)
+echo Copiando {tempPath} -> {currentExe} >> "{logBat}"
+copy /y "{tempPath}" "{currentExe}" >> "{logBat}" 2>&1
 if errorlevel 1 (
-  echo Error copiando, intenta ejecutar como administrador
-  pause
+  echo ERROR copia, reintentando... >> "{logBat}"
+  timeout /t 1 /nobreak >nul
+  copy /y "{tempPath}" "{currentExe}" >> "{logBat}" 2>&1
+)
+if errorlevel 1 (
+  echo FALLO definitivo, requiere admin >> "{logBat}"
+  echo FALLO copia, ejecute como administrador >> "{logBat}"
+  powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('No se pudo actualizar. Ejecute Hefesto como administrador y reintente.', 'Hefesto Update', 'OK', 'Error')"
   exit /b 1
 )
-echo Actualizado. Iniciando...
+echo Copia OK, iniciando... >> "{logBat}"
 start "" "{currentExe}"
-del "{tempPath}" >nul 2>&1
-del "%~f0" >nul 2>&1
+del "{tempPath}" >> "{logBat}" 2>&1
+del "%~f0" >> "{logBat}" 2>&1
 """;
         File.WriteAllText(batPath, bat);
-        var psi = new ProcessStartInfo("cmd.exe", $"/c \"{batPath}\"") { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden };
+        Log($"BAT creado {batPath}, lanzando...");
+        var psi = new ProcessStartInfo("cmd.exe", $"/c \"{batPath}\"") { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden, CreateNoWindow = true };
         Process.Start(psi);
+        Log("Application.Exit() llamado");
         Application.Exit();
     }
 }
