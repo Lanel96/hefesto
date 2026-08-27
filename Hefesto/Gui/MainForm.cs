@@ -327,17 +327,18 @@ public class MainForm : Form
     }
 }
 
-// Formularios auxiliares pequeños
+// Formularios auxiliares pequeños - tamaños aumentados para no cortar en DPI 125%
 public class EstadoForm : Form
 {
     public EstadoForm(int id, string actual)
     {
-        Text = $"Cambiar Estado - Orden #{id}"; Size = new Size(350, 180); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
-        var cmb = new ComboBox { Location = new Point(20, 30), Size = new Size(290, 30), DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 10) };
+        Text = $"Cambiar Estado - Orden #{id}"; ClientSize = new Size(360, 210); MinimumSize = new Size(380, 240); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; BackColor = Color.White;
+        var cmb = new ComboBox { Location = new Point(20, 30), Size = new Size(320, 30), DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 10) };
         cmb.Items.AddRange(new[] { "Abierta", "En Proceso", "Finalizada", "Entregada", "Cancelada" }); cmb.SelectedItem = actual;
-        var dtp = new DateTimePicker { Location = new Point(20, 70), Size = new Size(290, 30), Format = DateTimePickerFormat.Short, Value = DateTime.Now };
-        var lbl = new Label { Text = "Fecha entrega (si aplica):", Location = new Point(20, 55), AutoSize = true, Font = new Font("Segoe UI", 7) };
-        var btn = new Button { Text = "Guardar", Location = new Point(20, 105), Size = new Size(290, 32), BackColor = Color.FromArgb(30, 60, 110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        var dtp = new DateTimePicker { Location = new Point(20, 85), Size = new Size(320, 30), Format = DateTimePickerFormat.Short, Value = DateTime.Now };
+        var lbl = new Label { Text = "Fecha entrega (si aplica):", Location = new Point(20, 65), AutoSize = true, Font = new Font("Segoe UI", 7) };
+        var btn = new Button { Text = "💾 Guardar", Location = new Point(20, 130), Size = new Size(320, 36), BackColor = Color.FromArgb(30, 60, 110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+        btn.FlatAppearance.BorderSize = 0;
         btn.Click += (s, e) => { Repos.UpdateOrdenEstado(id, cmb.SelectedItem!.ToString()!, cmb.SelectedItem!.ToString() == "Entregada" || cmb.SelectedItem!.ToString() == "Finalizada" ? dtp.Value : null); DialogResult = DialogResult.OK; };
         Controls.AddRange(new Control[] { cmb, lbl, dtp, btn });
     }

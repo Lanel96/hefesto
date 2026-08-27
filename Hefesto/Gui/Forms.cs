@@ -4,21 +4,22 @@ namespace Hefesto.Gui;
 
 public class VehiculoForm : Form
 {
-    TextBox txtPlaca = new() { CharacterCasing = CharacterCasing.Upper };
-    TextBox txtMarca = new();
-    TextBox txtModelo = new();
-    NumericUpDown txtAnio = new() { Minimum = 1900, Maximum = 2030, Value = 2020 };
-    TextBox txtCliente = new();
-    TextBox txtTel = new();
+    TextBox txtPlaca = new() { CharacterCasing = CharacterCasing.Upper, BorderStyle = BorderStyle.FixedSingle };
+    TextBox txtMarca = new() { BorderStyle = BorderStyle.FixedSingle };
+    TextBox txtModelo = new() { BorderStyle = BorderStyle.FixedSingle };
+    NumericUpDown txtAnio = new() { Minimum = 1900, Maximum = 2030, Value = 2020, BorderStyle = BorderStyle.FixedSingle };
+    TextBox txtCliente = new() { BorderStyle = BorderStyle.FixedSingle };
+    TextBox txtTel = new() { BorderStyle = BorderStyle.FixedSingle };
     public VehiculoForm(Vehiculo? v)
     {
         Text = v == null ? "Nuevo Vehículo" : $"Editar {v.Placa}";
-        Size = new Size(420, 380); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
+        ClientSize = new Size(420, 460); MinimumSize = new Size(440, 500); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; AutoScroll = true; BackColor = Color.White;
         int y = 15;
-        void Add(string label, Control c) { Controls.Add(new Label { Text = label, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(370, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 55; }
+        void Add(string label, Control c) { Controls.Add(new Label { Text = label, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(390, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 58; }
         Add("Placa *", txtPlaca); Add("Marca *", txtMarca); Add("Modelo *", txtModelo); Add("Año", txtAnio); Add("Cliente *", txtCliente); Add("Teléfono", txtTel);
-        if (v != null) { txtPlaca.Text = v.Placa; txtPlaca.ReadOnly = true; txtPlaca.BackColor = Color.LightGray; txtMarca.Text = v.Marca; txtModelo.Text = v.Modelo; if (v.Anio.HasValue) txtAnio.Value = v.Anio.Value; txtCliente.Text = v.Cliente; txtTel.Text = v.Telefono; }
-        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 5), Size = new Size(370, 36), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        if (v != null) { txtPlaca.Text = v.Placa; txtPlaca.ReadOnly = true; txtPlaca.BackColor = Color.FromArgb(240,240,240); txtMarca.Text = v.Marca; txtModelo.Text = v.Modelo; if (v.Anio.HasValue) txtAnio.Value = v.Anio.Value; txtCliente.Text = v.Cliente; txtTel.Text = v.Telefono; }
+        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 10), Size = new Size(390, 38), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        btn.FlatAppearance.BorderSize = 0;
         btn.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtPlaca.Text) || string.IsNullOrWhiteSpace(txtMarca.Text) || string.IsNullOrWhiteSpace(txtModelo.Text) || string.IsNullOrWhiteSpace(txtCliente.Text)) { MessageBox.Show("Placa, Marca, Modelo y Cliente son obligatorios"); return; } Repos.UpsertVehiculo(new Vehiculo(txtPlaca.Text.Trim().ToUpper(), txtMarca.Text.Trim(), txtModelo.Text.Trim(), (int)txtAnio.Value, txtCliente.Text.Trim(), txtTel.Text.Trim())); DialogResult = DialogResult.OK; };
         Controls.Add(btn);
     }
@@ -26,22 +27,23 @@ public class VehiculoForm : Form
 
 public class ServicioForm : Form
 {
-    TextBox txtCodigo = new() { CharacterCasing = CharacterCasing.Upper };
-    TextBox txtNombre = new();
-    TextBox txtDesc = new();
-    NumericUpDown txtPrecio = new() { DecimalPlaces = 2, Maximum = 100000, Minimum = 0 };
-    NumericUpDown txtDur = new() { Maximum = 1000, Minimum = 5, Value = 60 };
+    TextBox txtCodigo = new() { CharacterCasing = CharacterCasing.Upper, BorderStyle = BorderStyle.FixedSingle };
+    TextBox txtNombre = new() { BorderStyle = BorderStyle.FixedSingle };
+    TextBox txtDesc = new() { BorderStyle = BorderStyle.FixedSingle };
+    NumericUpDown txtPrecio = new() { DecimalPlaces = 2, Maximum = 100000, Minimum = 0, BorderStyle = BorderStyle.FixedSingle };
+    NumericUpDown txtDur = new() { Maximum = 1000, Minimum = 5, Value = 60, BorderStyle = BorderStyle.FixedSingle };
     int id;
     public ServicioForm(Servicio? s)
     {
         Text = s == null ? "Nuevo Servicio" : $"Editar {s.Codigo}";
-        Size = new Size(420, 360); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
+        ClientSize = new Size(420, 420); MinimumSize = new Size(440, 460); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; AutoScroll = true; BackColor = Color.White;
         id = s?.Id ?? 0;
         int y = 15;
-        void Add(string label, Control c) { Controls.Add(new Label { Text = label, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(370, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 55; }
+        void Add(string label, Control c) { Controls.Add(new Label { Text = label, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(390, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 58; }
         Add("Código *", txtCodigo); Add("Nombre *", txtNombre); Add("Descripción", txtDesc); Add("Precio *", txtPrecio); Add("Duración (min)", txtDur);
         if (s != null) { txtCodigo.Text = s.Codigo; txtNombre.Text = s.Nombre; txtDesc.Text = s.Descripcion; txtPrecio.Value = s.Precio; txtDur.Value = s.DuracionMin; }
-        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 5), Size = new Size(370, 36), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 10), Size = new Size(390, 38), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        btn.FlatAppearance.BorderSize = 0;
         btn.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text)) { MessageBox.Show("Código y Nombre requeridos"); return; } try { Repos.SaveServicio(new Servicio(id, txtCodigo.Text.Trim().ToUpper(), txtNombre.Text.Trim(), txtDesc.Text.Trim(), txtPrecio.Value, (int)txtDur.Value)); DialogResult = DialogResult.OK; } catch (Exception ex) { MessageBox.Show(ex.Message); } };
         Controls.Add(btn);
     }
@@ -51,7 +53,7 @@ public class DetalleOrdenForm : Form
 {
     public DetalleOrdenForm(int ordenId)
     {
-        Text = $"Detalle Orden #{ordenId}"; Size = new Size(750, 550); StartPosition = FormStartPosition.CenterParent; BackColor = Color.White;
+        Text = $"Detalle Orden #{ordenId}"; ClientSize = new Size(750, 550); MinimumSize = new Size(760, 560); StartPosition = FormStartPosition.CenterParent; BackColor = Color.White; AutoScaleMode = AutoScaleMode.Dpi; AutoScroll = true;
         var orden = Repos.GetOrdenes().First(o => o.Id == ordenId);
         var servs = Repos.GetOrdenServicios(ordenId);
         var reps = Repos.GetRepuestos(ordenId);
@@ -80,18 +82,19 @@ public class DetalleOrdenForm : Form
 
 public class UsuarioForm : Form
 {
-    TextBox txtUser = new();
-    TextBox txtPass = new() { UseSystemPasswordChar = true };
+    TextBox txtUser = new() { BorderStyle = BorderStyle.FixedSingle };
+    TextBox txtPass = new() { UseSystemPasswordChar = true, BorderStyle = BorderStyle.FixedSingle };
     ComboBox cmbRol = new() { DropDownStyle = ComboBoxStyle.DropDownList, Items = { "Admin", "Mecánico", "Cajero" } };
     public UsuarioForm()
     {
-        Text = "Nuevo Usuario"; Size = new Size(360, 280); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
+        Text = "Nuevo Usuario"; ClientSize = new Size(360, 300); MinimumSize = new Size(380, 340); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; AutoScroll = true; BackColor = Color.White;
         cmbRol.SelectedIndex = 0;
         int y = 15;
-        void Add(string l, Control c) { Controls.Add(new Label { Text = l, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(310, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 55; }
+        void Add(string l, Control c) { Controls.Add(new Label { Text = l, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(330, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 58; }
         Add("Usuario *", txtUser); Add("Contraseña *", txtPass); Add("Rol", cmbRol);
-        var lblInfo = new Label { Text = "Módulo personalizado: cada usuario tendrá su acceso", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Location = new Point(15, y) }; Controls.Add(lblInfo); y += 20;
-        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 5), Size = new Size(310, 34), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        var lblInfo = new Label { Text = "Módulo personalizado: cada usuario tendrá su acceso", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Location = new Point(15, y) }; Controls.Add(lblInfo); y += 22;
+        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 5), Size = new Size(330, 36), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        btn.FlatAppearance.BorderSize = 0;
         btn.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtUser.Text) || string.IsNullOrWhiteSpace(txtPass.Text)) { MessageBox.Show("Usuario y contraseña requeridos"); return; } Repos.SaveUsuario(txtUser.Text.Trim(), txtPass.Text, cmbRol.SelectedItem!.ToString()!); DialogResult = DialogResult.OK; };
         Controls.Add(btn);
     }

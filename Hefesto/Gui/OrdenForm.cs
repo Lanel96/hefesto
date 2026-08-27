@@ -91,13 +91,14 @@ public class OrdenForm : Form
 
         var pRep = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10,0,10,5), Margin = new Padding(0) };
         var lblRep = new Label { Text = "3️⃣ Repuestos con Garantía (código + nombre + días) - opcional", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(150,80,0) };
-        var pRepInput = new Panel { Dock = DockStyle.Top, Height = 36, Padding = new Padding(0,3,0,3) };
-        var txtCod = new TextBox { PlaceholderText = "Código", Location = new Point(0, 4), Size = new Size(110, 26), BorderStyle = BorderStyle.FixedSingle };
-        var txtNom = new TextBox { PlaceholderText = "Nombre repuesto", Location = new Point(115, 4), Size = new Size(210, 26), BorderStyle = BorderStyle.FixedSingle };
-        var txtDias = new NumericUpDown { Minimum = 1, Maximum = 3650, Value = 90, Location = new Point(330, 4), Size = new Size(75, 26) };
-        var lblDias = new Label { Text = "días", Location = new Point(410, 8), AutoSize = true };
-        var btnAddRep = new Button { Text = "Agregar", Location = new Point(445, 4), Size = new Size(85, 26), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-        var btnDelRep = new Button { Text = "Quitar", Location = new Point(535, 4), Size = new Size(85, 26), BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        var pRepInput = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 38, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(0,3,0,3), BackColor = Color.Transparent, AutoScroll = false };
+        var txtCod = new TextBox { PlaceholderText = "Código", Size = new Size(110, 26), BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0, 4, 5, 0) };
+        var txtNom = new TextBox { PlaceholderText = "Nombre repuesto", Size = new Size(210, 26), BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0, 4, 5, 0) };
+        var txtDias = new NumericUpDown { Minimum = 1, Maximum = 3650, Value = 90, Size = new Size(75, 26), Margin = new Padding(0, 4, 5, 0), BorderStyle = BorderStyle.FixedSingle };
+        var lblDias = new Label { Text = "días", AutoSize = true, Margin = new Padding(0, 8, 8, 0) };
+        var btnAddRep = new Button { Text = "Agregar", Size = new Size(85, 28), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 3, 5, 0) };
+        var btnDelRep = new Button { Text = "Quitar", Size = new Size(85, 28), BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 3, 0, 0) };
+        btnAddRep.FlatAppearance.BorderSize = 0; btnDelRep.FlatAppearance.BorderSize = 0;
         btnAddRep.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtCod.Text) || string.IsNullOrWhiteSpace(txtNom.Text)) { MessageBox.Show("Código y nombre requeridos"); return; } repuestos.Add((txtCod.Text.Trim(), txtNom.Text.Trim(), (int)txtDias.Value, DateTime.Now)); RefreshRepuestos(); txtCod.Clear(); txtNom.Clear(); };
         btnDelRep.Click += (s, e) => { if (dgvRepuestos.CurrentRow != null) { repuestos.RemoveAt(dgvRepuestos.CurrentRow.Index); RefreshRepuestos(); } };
         pRepInput.Controls.AddRange(new Control[] { txtCod, txtNom, txtDias, lblDias, btnAddRep, btnDelRep });
@@ -171,12 +172,13 @@ public class PrecioForm : Form
     public int Cantidad { get; private set; } = 1;
     public PrecioForm(string nombre, decimal precioActual)
     {
-        Text = nombre; Size = new Size(340, 190); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
-        var lbl = new Label { Text = "Precio a aplicar (editable):", Location = new Point(15, 15), AutoSize = true };
-        var txtPrecio = new NumericUpDown { Location = new Point(15, 35), Size = new Size(290, 28), DecimalPlaces = 2, Maximum = 100000, Minimum = 0, Value = precioActual, Font = new Font("Segoe UI", 11) };
-        var lblCant = new Label { Text = "Cantidad:", Location = new Point(15, 70), AutoSize = true };
-        var txtCant = new NumericUpDown { Location = new Point(15, 90), Size = new Size(100, 28), Minimum = 1, Maximum = 100, Value = 1 };
-        var btn = new Button { Text = "Agregar", Location = new Point(15, 130), Size = new Size(290, 32), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        Text = nombre; ClientSize = new Size(360, 220); MinimumSize = new Size(380, 250); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; BackColor = Color.White;
+        var lbl = new Label { Text = "Precio a aplicar (editable):", Location = new Point(15, 15), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        var txtPrecio = new NumericUpDown { Location = new Point(15, 35), Size = new Size(330, 28), DecimalPlaces = 2, Maximum = 100000, Minimum = 0, Value = precioActual, Font = new Font("Segoe UI", 11), BorderStyle = BorderStyle.FixedSingle };
+        var lblCant = new Label { Text = "Cantidad:", Location = new Point(15, 75), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        var txtCant = new NumericUpDown { Location = new Point(15, 95), Size = new Size(120, 28), Minimum = 1, Maximum = 100, Value = 1, BorderStyle = BorderStyle.FixedSingle };
+        var btn = new Button { Text = "Agregar", Location = new Point(15, 145), Size = new Size(330, 36), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+        btn.FlatAppearance.BorderSize = 0;
         btn.Click += (s, e) => { Precio = txtPrecio.Value; Cantidad = (int)txtCant.Value; DialogResult = DialogResult.OK; };
         Controls.AddRange(new Control[] { lbl, txtPrecio, lblCant, txtCant, btn });
     }
