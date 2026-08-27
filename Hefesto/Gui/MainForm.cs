@@ -21,11 +21,33 @@ public class MainForm : Form
     DataGridView dgvUsers = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, SelectionMode = DataGridViewSelectionMode.FullRowSelect };
     Label lblRuta = new();
 
+    void ConfigureGrid(DataGridView dgv)
+    {
+        dgv.EnableHeadersVisualStyles = false;
+        dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(30, 60, 110);
+        dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 8, FontStyle.Bold);
+        dgv.ColumnHeadersHeight = 32;
+        dgv.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+        dgv.RowHeadersVisible = false;
+        dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        dgv.ReadOnly = true;
+        dgv.AllowUserToAddRows = false;
+        dgv.AllowUserToResizeRows = false;
+        dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        dgv.BackgroundColor = Color.White;
+        dgv.BorderStyle = BorderStyle.FixedSingle;
+        dgv.GridColor = Color.FromArgb(220, 220, 220);
+        dgv.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 248, 248);
+        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 8.5F);
+        dgv.DefaultCellStyle.Padding = new Padding(2);
+    }
+
     public MainForm()
     {
         Text = "Hefesto - Sistema Taller Mecánico  |  DB: " + Db.DbPath;
         WindowState = FormWindowState.Maximized;
-        MinimumSize = new Size(1100, 650);
+        MinimumSize = new Size(1200, 700);
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
@@ -44,15 +66,20 @@ public class MainForm : Form
             btnUpdate.Location = new Point(header.Width - 130, 24);
         };
 
-        tabs.ItemSize = new Size(135, 34);
+        tabs.ItemSize = new Size(185, 38);
         tabs.SizeMode = TabSizeMode.Fixed;
-        tabs.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+        tabs.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+        tabs.DrawMode = TabDrawMode.Normal;
+        tabs.Padding = new Point(12, 4);
         tabs.TabPages.Add(MakeOrdenesTab());
         tabs.TabPages.Add(MakeVehiculosTab());
         tabs.TabPages.Add(MakeServiciosTab());
         tabs.TabPages.Add(MakeBitacoraTab());
         tabs.TabPages.Add(MakeUsersTab());
         tabs.TabPages.Add(MakeConfigTab());
+
+        // Estilo profesional senior para todas las grillas
+        ConfigureGrid(dgvOrdenes); ConfigureGrid(dgvVeh); ConfigureGrid(dgvServ); ConfigureGrid(dgvBit); ConfigureGrid(dgvUsers);
 
         var container = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8, 8, 8, 8) };
         tabs.Dock = DockStyle.Fill;
@@ -212,17 +239,45 @@ public class MainForm : Form
     }
     void LoadServicios()
     {
-        dgvServ.DataSource = Repos.GetServicios(txtFiltroServ.Text).Select(s => new { s.Id, s.Codigo, s.Nombre, s.Descripcion, Precio = s.Precio.ToString("C"), Duración = s.DuracionMin + " min" }).ToList();
-        if (dgvServ.IsHandleCreated && dgvServ.Columns["Id"] != null)
+        var data = Repos.GetServicios(txtFiltroServ.Text).Select(s => new { s.Id, s.Codigo, s.Nombre, s.Descripcion, Precio = s.Precio.ToString("C"), Duración = s.DuracionMin + " min" }).ToList();
+        dgvServ.DataSource = data;
+        if (dgvServ.IsHandleCreated)
         {
-            try { dgvServ.Columns["Id"]!.Width = 40; } catch { }
+            try
+            {
+                if (dgvServ.Columns["Id"] != null) { dgvServ.Columns["Id"]!.FillWeight = 8; dgvServ.Columns["Id"]!.MinimumWidth = 50; }
+                if (dgvServ.Columns["Codigo"] != null) { dgvServ.Columns["Codigo"]!.FillWeight = 15; dgvServ.Columns["Codigo"]!.MinimumWidth = 85; }
+                if (dgvServ.Columns["Nombre"] != null) { dgvServ.Columns["Nombre"]!.FillWeight = 25; dgvServ.Columns["Nombre"]!.MinimumWidth = 120; }
+                if (dgvServ.Columns["Descripcion"] != null) dgvServ.Columns["Descripcion"]!.FillWeight = 27;
+                if (dgvServ.Columns["Precio"] != null) { dgvServ.Columns["Precio"]!.FillWeight = 12; dgvServ.Columns["Precio"]!.MinimumWidth = 80; }
+                if (dgvServ.Columns["Duración"] != null) { dgvServ.Columns["Duración"]!.FillWeight = 13; dgvServ.Columns["Duración"]!.MinimumWidth = 85; dgvServ.Columns["Duración"]!.HeaderText = "Duración"; }
+            } catch { }
         }
+        // Empty state profesional
+        if (data.Count == 0 && string.IsNullOrWhiteSpace(txtFiltroServ.Text))
+        {
+            dgvServ.BackgroundColor = Color.FromArgb(255, 250, 230);
+        }
+        else dgvServ.BackgroundColor = Color.White;
     }
     void LoadBitacora()
     {
         var reps = Repos.GetAllRepuestos(txtFiltroBit.Text);
         var data = reps.Select(r => new { r.OrdenId, r.Codigo, r.Nombre, Garantía = r.DiasGarantia + " días", Inicio = r.FechaInicio.ToString("dd/MM/yyyy"), Fin = r.FechaFin.ToString("dd/MM/yyyy"), Estado = r.EstadoGarantia }).ToList();
         dgvBit.DataSource = data;
+        if (dgvBit.IsHandleCreated)
+        {
+            try
+            {
+                if (dgvBit.Columns["OrdenId"] != null) { dgvBit.Columns["OrdenId"]!.FillWeight = 10; dgvBit.Columns["OrdenId"]!.MinimumWidth = 65; dgvBit.Columns["OrdenId"]!.HeaderText = "Orden"; }
+                if (dgvBit.Columns["Codigo"] != null) { dgvBit.Columns["Codigo"]!.FillWeight = 14; dgvBit.Columns["Codigo"]!.MinimumWidth = 80; }
+                if (dgvBit.Columns["Nombre"] != null) { dgvBit.Columns["Nombre"]!.FillWeight = 20; dgvBit.Columns["Nombre"]!.MinimumWidth = 110; }
+                if (dgvBit.Columns["Garantía"] != null) { dgvBit.Columns["Garantía"]!.FillWeight = 13; dgvBit.Columns["Garantía"]!.MinimumWidth = 90; dgvBit.Columns["Garantía"]!.HeaderText = "Garantía"; }
+                if (dgvBit.Columns["Inicio"] != null) { dgvBit.Columns["Inicio"]!.FillWeight = 13; dgvBit.Columns["Inicio"]!.MinimumWidth = 85; }
+                if (dgvBit.Columns["Fin"] != null) { dgvBit.Columns["Fin"]!.FillWeight = 13; dgvBit.Columns["Fin"]!.MinimumWidth = 85; }
+                if (dgvBit.Columns["Estado"] != null) { dgvBit.Columns["Estado"]!.FillWeight = 17; dgvBit.Columns["Estado"]!.MinimumWidth = 130; }
+            } catch { }
+        }
         foreach (DataGridViewRow row in dgvBit.Rows)
         {
             var estado = row.Cells["Estado"].Value?.ToString() ?? "";
