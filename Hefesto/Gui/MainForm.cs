@@ -25,11 +25,13 @@ public class MainForm : Form
     {
         Text = "Hefesto - Sistema Taller Mecánico  |  DB: " + Db.DbPath;
         WindowState = FormWindowState.Maximized;
+        MinimumSize = new Size(1100, 650);
+        AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
 
-        // Header - responsive con TableLayout
-        var header = new Panel { Height = 60, Dock = DockStyle.Top, BackColor = Color.FromArgb(30, 60, 110) };
+        // Header - aumentado a 75 para no tapar botones (fix barra superior)
+        var header = new Panel { Height = 72, Dock = DockStyle.Top, BackColor = Color.FromArgb(30, 60, 110) };
         var lblLogo = new Label { Text = "⚙ HEFESTO", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, AutoSize = true, Location = new Point(15, 12) };
         var lblSub = new Label { Text = "Gestión de Órdenes • Vehículos • Servicios • Garantías", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = true, Location = new Point(16, 36) };
         var lblVer = new Label { Text = $"v{Updater.CurrentVersion}", Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.FromArgb(255, 230, 100), AutoSize = true, Location = new Point(155, 18) };
@@ -46,16 +48,17 @@ public class MainForm : Form
         };
         Controls.Add(header);
 
-        tabs.ItemSize = new Size(120, 32);
+        tabs.ItemSize = new Size(135, 34);
         tabs.SizeMode = TabSizeMode.Fixed;
         tabs.Font = new Font("Segoe UI", 9, FontStyle.Bold);
         tabs.TabPages.Add(MakeOrdenesTab());
         tabs.TabPages.Add(MakeVehiculosTab());
         tabs.TabPages.Add(MakeServiciosTab());
         tabs.TabPages.Add(MakeBitacoraTab());
+        tabs.TabPages.Add(MakeUsersTab());
         tabs.TabPages.Add(MakeConfigTab());
 
-        var container = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8) };
+        var container = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8, 4, 8, 8) };
         container.Controls.Add(tabs);
         Controls.Add(container);
         tabs.BringToFront();
@@ -67,6 +70,7 @@ public class MainForm : Form
             if (tabs.SelectedIndex == 1) SafeLoad(LoadVehiculos, "Vehículos");
             if (tabs.SelectedIndex == 2) SafeLoad(LoadServicios, "Servicios");
             if (tabs.SelectedIndex == 3) SafeLoad(LoadBitacora, "Bitácora");
+            if (tabs.SelectedIndex == 4) SafeLoad(LoadUsuarios, "Usuarios");
         };
         Shown += async (s, e) => await CheckUpdatesAsync(true);
     }
@@ -141,24 +145,31 @@ public class MainForm : Form
         return p;
     }
 
+    TabPage MakeUsersTab()
+    {
+        var p = new TabPage("  👥 USUARIOS  ");
+        var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(8), BackColor = Color.FromArgb(248,248,248) };
+        var lblInfo = new Label { Text = "Módulo personalizado: crea usuarios del taller (Admin/Mecánico/Cajero)", ForeColor = Color.Gray, Font = new Font("Segoe UI", 8, FontStyle.Italic), AutoSize = true, Margin = new Padding(0, 8, 12, 0) };
+        var btnAddU = MakeBtn("➕ Nuevo Usuario", Color.FromArgb(0, 150, 80), AgregarUsuario); btnAddU.Margin = new Padding(4);
+        var btnDelU = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvUsers.CurrentRow == null) return; var id = Convert.ToInt32(dgvUsers.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar usuario?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteUsuario(id); LoadUsuarios(); } }); btnDelU.Margin = new Padding(4);
+        var btnEditU = MakeBtn("✏ Editar", Color.FromArgb(30, 60, 110), () => { if (dgvUsers.CurrentRow == null) return; var id = Convert.ToInt32(dgvUsers.CurrentRow.Cells["Id"].Value); var u = Repos.GetUsuarios().FirstOrDefault(x=>x.Id==id); if(u!=null){ using var f=new UsuarioForm(u.Username, u.Rol); if(f.ShowDialog()==DialogResult.OK) LoadUsuarios(); } }); btnEditU.Margin = new Padding(4);
+        top.Controls.AddRange(new Control[] { btnAddU, btnDelU, btnEditU, lblInfo });
+        p.Controls.Add(dgvUsers); p.Controls.Add(top);
+        dgvUsers.Dock = DockStyle.Fill;
+        return p;
+    }
+
     TabPage MakeConfigTab()
     {
         var p = new TabPage("  ⚙ CONFIGURACIÓN  ");
-        var top = new Panel { Height = 80, Dock = DockStyle.Top, BackColor = Color.FromArgb(245, 245, 245) };
+        var top = new Panel { Dock = DockStyle.Top, Height = 90, BackColor = Color.FromArgb(245, 245, 245), Padding = new Padding(10) };
         lblRuta.Text = "Base actual: " + Db.DbPath;
-        lblRuta.Location = new Point(10, 10); lblRuta.AutoSize = true; lblRuta.Font = new Font("Segoe UI", 8, FontStyle.Bold);
+        lblRuta.AutoSize = false; lblRuta.Size = new Size(700, 20); lblRuta.Location = new Point(10, 10); lblRuta.Font = new Font("Segoe UI", 8, FontStyle.Bold);
         var btnCambiar = MakeBtn("📁 Cambiar / Respaldar DB", Color.FromArgb(30, 60, 110), new Point(10, 35), CambiarDb);
-        var lblUser = new Label { Text = "Usuarios del sistema:", Location = new Point(10, 75), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-        top.Controls.AddRange(new Control[] { lblRuta, btnCambiar });
-        var panelUsers = new Panel { Dock = DockStyle.Fill };
-        var topUsers = new Panel { Height = 45, Dock = DockStyle.Top };
-        var btnAddU = MakeBtn("➕ Nuevo Usuario", Color.FromArgb(0, 150, 80), new Point(5, 6), AgregarUsuario);
-        var btnDelU = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), new Point(160, 6), () => { if (dgvUsers.CurrentRow == null) return; var id = Convert.ToInt32(dgvUsers.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar usuario?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteUsuario(id); LoadUsuarios(); } });
-        topUsers.Controls.AddRange(new Control[] { btnAddU, btnDelU });
-        panelUsers.Controls.Add(dgvUsers); panelUsers.Controls.Add(topUsers);
-        p.Controls.Add(panelUsers); p.Controls.Add(top); p.Controls.Add(lblUser);
-        // fix layout
-        lblUser.Dock = DockStyle.Top; top.Dock = DockStyle.Top; panelUsers.BringToFront();
+        var lblVer2 = new Label { Text = $"Versión: v{Updater.CurrentVersion}  |  Repo: {Updater.Repo}  |  SQLite embebido", AutoSize = true, Location = new Point(10, 70), Font = new Font("Segoe UI", 7), ForeColor = Color.Gray };
+        top.Controls.AddRange(new Control[] { lblRuta, btnCambiar, lblVer2 });
+        var lblInfo2 = new Label { Text = "La base se guarda junto al exe (hefesto.db) y es portable. Usa 'Cambiar' para respaldar.", Dock = DockStyle.Top, Height = 30, TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(10, 5, 0, 0), ForeColor = Color.Gray, Font = new Font("Segoe UI", 8, FontStyle.Italic) };
+        p.Controls.Add(lblInfo2); p.Controls.Add(top);
         return p;
     }
 

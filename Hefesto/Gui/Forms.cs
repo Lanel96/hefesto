@@ -85,13 +85,23 @@ public class UsuarioForm : Form
     ComboBox cmbRol = new() { DropDownStyle = ComboBoxStyle.DropDownList, Items = { "Admin", "Mecánico", "Cajero" } };
     public UsuarioForm()
     {
-        Text = "Nuevo / Editar Usuario"; Size = new Size(360, 260); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
+        Text = "Nuevo Usuario"; Size = new Size(360, 280); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
         cmbRol.SelectedIndex = 0;
         int y = 15;
         void Add(string l, Control c) { Controls.Add(new Label { Text = l, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(310, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 55; }
         Add("Usuario *", txtUser); Add("Contraseña *", txtPass); Add("Rol", cmbRol);
-        var btn = new Button { Text = "Guardar", Location = new Point(15, y + 5), Size = new Size(310, 34), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        var lblInfo = new Label { Text = "Módulo personalizado: cada usuario tendrá su acceso", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Location = new Point(15, y) }; Controls.Add(lblInfo); y += 20;
+        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 5), Size = new Size(310, 34), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
         btn.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtUser.Text) || string.IsNullOrWhiteSpace(txtPass.Text)) { MessageBox.Show("Usuario y contraseña requeridos"); return; } Repos.SaveUsuario(txtUser.Text.Trim(), txtPass.Text, cmbRol.SelectedItem!.ToString()!); DialogResult = DialogResult.OK; };
         Controls.Add(btn);
+    }
+    public UsuarioForm(string username, string rol) : this()
+    {
+        Text = $"Editar Usuario - {username}";
+        txtUser.Text = username; txtUser.ReadOnly = true; txtUser.BackColor = Color.FromArgb(240,240,240);
+        cmbRol.SelectedItem = rol;
+        // en edición, contraseña es opcional: si se deja vacía, se mantiene
+        var lbl = Controls.OfType<Label>().FirstOrDefault(l => l.Text == "Contraseña *");
+        if (lbl != null) lbl.Text = "Nueva Contraseña (dejar vacío para mantener)";
     }
 }
