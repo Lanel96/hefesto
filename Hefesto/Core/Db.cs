@@ -17,20 +17,30 @@ public static class Db
 
     public static void EnsureCreated()
     {
+        // Asegurar directorio existe
+        var dir = Path.GetDirectoryName(DbPath);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
         bool exists = File.Exists(DbPath);
+        // Si el archivo existe pero es 0 bytes o corrupto, lo tratamos como nuevo
+        if (exists)
+        {
+            var fi = new FileInfo(DbPath);
+            if (fi.Length == 0) exists = false;
+        }
+
         using var conn = new SqliteConnection(ConnectionString);
         conn.Open();
 
-        // WAL para estabilidad en cierres bruscos
         using (var cmd = conn.CreateCommand())
         {
             cmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA foreign_keys=ON;";
             cmd.ExecuteNonQuery();
         }
 
-        if (!exists)
-        {
-            var sql = @"
+        // Crear tablas siempre con IF NOT EXISTS (idempotente)
+        var sql = @"
 CREATE TABLE IF NOT EXISTS Vehiculos (
   Placa TEXT PRIMARY KEY COLLATE NOCASE,
   Marca TEXT NOT NULL,
@@ -82,18 +92,43 @@ CREATE TABLE IF NOT EXISTS Usuarios (
 CREATE INDEX IF NOT EXISTS idx_ordenes_placa ON Ordenes(Placa);
 CREATE INDEX IF NOT EXISTS idx_repuestos_orden ON OrdenRepuestos(OrdenId);
 ";
-            using var cmd2 = conn.CreateCommand();
-            cmd2.CommandText = sql;
-            cmd2.ExecuteNonQuery();
+        using var cmd2 = conn.CreateCommand();
+        cmd2.CommandText = sql;
+        cmd2.ExecuteNonQuery();
 
-            // Usuario admin por defecto: admin / admin123
-            var hash = Hash("admin123");
+        // Asegurar admin existe (siempre)
+        var hash = Hash("admin123");
+        using var cmdCheck = conn.CreateCommand();
+        cmdCheck.CommandText = "SELECT COUNT(*) FROM Usuarios WHERE Username='admin' COLLATE NOCASE";
+        var cnt = Convert.ToInt32(cmdCheck.ExecuteScalar());
+        if (cnt == 0)
+        {
             using var cmd3 = conn.CreateCommand();
-            cmd3.CommandText = "INSERT OR IGNORE INTO Usuarios (Username, PasswordHash, Rol) VALUES ('admin', $h, 'Admin')";
+            cmd3.CommandText = "INSERT INTO Usuarios (Username, PasswordHash, Rol) VALUES ('admin', $h, 'Admin')";
             cmd3.Parameters.AddWithValue("$h", hash);
             cmd3.ExecuteNonQuery();
+        }
+        else
+        {
+            // reparar hash si es diferente (migración)
+            using var cmdFix = conn.CreateCommand();
+            cmdFix.CommandText = "SELECT PasswordHash FROM Usuarios WHERE Username='admin' COLLATE NOCASE";
+            var existing = cmdFix.ExecuteScalar() as string;
+            if (existing != hash)
+            {
+                using var cmdUpd = conn.CreateCommand();
+                cmdUpd.CommandText = "UPDATE Usuarios SET PasswordHash=$h WHERE Username='admin' COLLATE NOCASE";
+                cmdUpd.Parameters.AddWithValue("$h", hash);
+                cmdUpd.ExecuteNonQuery();
+            }
+        }
 
-            // Servicios de ejemplo
+        // Servicios de ejemplo solo si tabla vacía
+        using var cmdCnt = conn.CreateCommand();
+        cmdCnt.CommandText = "SELECT COUNT(*) FROM Servicios";
+        var scnt = Convert.ToInt32(cmdCnt.ExecuteScalar());
+        if (scnt == 0)
+        {
             using var cmd4 = conn.CreateCommand();
             cmd4.CommandText = @"
 INSERT OR IGNORE INTO Servicios (Codigo, Nombre, Descripcion, Precio, DuracionMin) VALUES
@@ -104,19 +139,6 @@ INSERT OR IGNORE INTO Servicios (Codigo, Nombre, Descripcion, Precio, DuracionMi
  ('S005','Cambio Correa Distribución','Kit completo', 250.00, 180);
 ";
             cmd4.ExecuteNonQuery();
-        }
-        else
-        {
-            // asegurar admin existe
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT COUNT(*) FROM Usuarios";
-            var c = Convert.ToInt32(cmd.ExecuteScalar());
-            if (c == 0)
-            {
-                cmd.CommandText = "INSERT INTO Usuarios (Username, PasswordHash, Rol) VALUES ('admin', $h, 'Admin')";
-                cmd.Parameters.AddWithValue("$h", Hash("admin123"));
-                cmd.ExecuteNonQuery();
-            }
         }
     }
 

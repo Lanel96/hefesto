@@ -63,21 +63,21 @@ public class LoginForm : Form
             if (Repos.Validate(user, pass))
             {
                 DialogResult = DialogResult.OK;
-                Close();
+                // No llamar Close() explícito: ShowDialog lo cierra al setear DialogResult
             }
             else
             {
                 lblError.Text = "Usuario o contraseña incorrectos";
                 lblError.Visible = true;
-                // También mostrar MessageBox para que sea visible en cualquier DPI
-                // MessageBox.Show("Usuario o contraseña incorrectos", "Acceso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtPass.SelectAll();
                 txtPass.Focus();
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Error al validar login:\n{ex.Message}\n\nRuta DB: {Db.DbPath}\n\nSQLite ya está incluido (no requiere instalación). Verifique permisos de escritura.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            lblError.Text = $"Error: {ex.Message}";
+            lblError.Visible = true;
+            MessageBox.Show($"Error al validar login:\n{ex.Message}\n\nRuta DB: {Db.DbPath}\n\nSQLite ya está incluido (no requiere instalación). Verifique permisos de escritura.\n\nStack: {ex.StackTrace}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "Hefesto Debug": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    "Hefesto con DB Temporal": {
+      "commandName": "Project",
+      "commandLineArgs": "",
+      "workingDirectory": "$(ProjectDir)",
+      "environmentVariables": {
+        "HEFESTO_DB": "%TEMP%\\hefesto_debug.db"
+      }
+    }
+  }
+}

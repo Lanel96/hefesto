@@ -5,4 +5,7 @@
   <Folder Name="/Gui/">
     <Project Path="Gui/Hefesto.Gui.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="../Hefesto.Tests/Hefesto.Tests.csproj" />
+  </Folder>
 </Solution>

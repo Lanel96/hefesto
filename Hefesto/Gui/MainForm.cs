@@ -56,8 +56,19 @@ public class MainForm : Form
         tabs.BringToFront();
         header.BringToFront();
 
-        LoadOrdenes(); LoadVehiculos(); LoadServicios(); LoadBitacora(); LoadUsuarios();
-        tabs.SelectedIndexChanged += (s, e) => { if (tabs.SelectedIndex == 0) LoadOrdenes(); if (tabs.SelectedIndex == 1) LoadVehiculos(); if (tabs.SelectedIndex == 2) LoadServicios(); if (tabs.SelectedIndex == 3) LoadBitacora(); };
+        // Carga segura con try/catch para que no se cierre silencioso (QA)
+        SafeLoad(LoadOrdenes, "Órdenes");
+        SafeLoad(LoadVehiculos, "Vehículos");
+        SafeLoad(LoadServicios, "Servicios");
+        SafeLoad(LoadBitacora, "Bitácora");
+        SafeLoad(LoadUsuarios, "Usuarios");
+        tabs.SelectedIndexChanged += (s, e) =>
+        {
+            if (tabs.SelectedIndex == 0) SafeLoad(LoadOrdenes, "Órdenes");
+            if (tabs.SelectedIndex == 1) SafeLoad(LoadVehiculos, "Vehículos");
+            if (tabs.SelectedIndex == 2) SafeLoad(LoadServicios, "Servicios");
+            if (tabs.SelectedIndex == 3) SafeLoad(LoadBitacora, "Bitácora");
+        };
         Shown += async (s, e) => await CheckUpdatesAsync(true);
     }
 
@@ -142,10 +153,20 @@ public class MainForm : Form
         return p;
     }
 
+    void SafeLoad(Action act, string name)
+    {
+        try { act(); }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error cargando {name}:\n{ex.Message}\n\n{ex.StackTrace}", "Hefesto - Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            try { File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "hefesto.log"), $"[{DateTime.Now}] SafeLoad {name} FAIL: {ex}{Environment.NewLine}"); } catch { }
+        }
+    }
+
     Button MakeBtn(string text, Color bg, Point loc, Action act)
     {
         var b = new Button { Text = text, Location = loc, Size = new Size(120, 32), BackColor = bg, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
-        b.FlatAppearance.BorderSize = 0; b.Click += (s, e) => act(); return b;
+        b.FlatAppearance.BorderSize = 0; b.Click += (s, e) => { try { act(); } catch (Exception ex) { MessageBox.Show($"Error: {ex.Message}\n\n{ex.StackTrace}"); } }; return b;
     }
 
     void LoadOrdenes()
