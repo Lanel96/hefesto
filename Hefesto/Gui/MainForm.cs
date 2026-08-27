@@ -30,8 +30,8 @@ public class MainForm : Form
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
 
-        // Header - aumentado a 75 para no tapar botones (fix barra superior)
-        var header = new Panel { Height = 72, Dock = DockStyle.Top, BackColor = Color.FromArgb(30, 60, 110) };
+        // Header - TableLayout evita que tape botones (fix screenshot)
+        var header = new Panel { Height = 78, Dock = DockStyle.Fill, BackColor = Color.FromArgb(30, 60, 110) };
         var lblLogo = new Label { Text = "⚙ HEFESTO", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, AutoSize = true, Location = new Point(15, 12) };
         var lblSub = new Label { Text = "Gestión de Órdenes • Vehículos • Servicios • Garantías", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = true, Location = new Point(16, 36) };
         var lblVer = new Label { Text = $"v{Updater.CurrentVersion}", Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.FromArgb(255, 230, 100), AutoSize = true, Location = new Point(155, 18) };
@@ -42,11 +42,10 @@ public class MainForm : Form
         header.Controls.AddRange(new Control[] { lblLogo, lblSub, lblVer, lblDb, btnUpdate });
         header.Resize += (s, e) =>
         {
-            lblDb.Location = new Point(Math.Max(220, header.Width - 500), 6);
+            lblDb.Location = new Point(Math.Max(220, header.Width - 500), 8);
             lblDb.Size = new Size(Math.Min(380, header.Width - 240), 30);
-            btnUpdate.Location = new Point(header.Width - 125, 28);
+            btnUpdate.Location = new Point(header.Width - 125, 32);
         };
-        Controls.Add(header);
 
         tabs.ItemSize = new Size(135, 34);
         tabs.SizeMode = TabSizeMode.Fixed;
@@ -58,11 +57,17 @@ public class MainForm : Form
         tabs.TabPages.Add(MakeUsersTab());
         tabs.TabPages.Add(MakeConfigTab());
 
-        var container = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8, 4, 8, 8) };
+        var container = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8, 8, 8, 8) };
+        tabs.Dock = DockStyle.Fill;
         container.Controls.Add(tabs);
-        Controls.Add(container);
-        tabs.BringToFront();
-        header.BringToFront();
+
+        // Layout sin solape: TableLayout 78px header + resto
+        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2, ColumnCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 78));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        layout.Controls.Add(header, 0, 0);
+        layout.Controls.Add(container, 0, 1);
+        Controls.Add(layout);
 
         tabs.SelectedIndexChanged += (s, e) =>
         {
