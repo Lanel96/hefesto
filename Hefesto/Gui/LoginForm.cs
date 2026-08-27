@@ -10,9 +10,8 @@ public class LoginForm : Form
     public LoginForm()
     {
         Text = "Hefesto - Iniciar Sesión";
-        ClientSize = new Size(420, 360);
-        MinimumSize = new Size(420, 360);
-        MaximumSize = new Size(420, 360);
+        ClientSize = new Size(440, 400);
+        MinimumSize = new Size(440, 400);
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false; MinimizeBox = false;
@@ -20,21 +19,21 @@ public class LoginForm : Form
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = new Font("Segoe UI", 9);
 
-        var lblTitle = new Label { Text = "HEFESTO", Font = new Font("Segoe UI", 22, FontStyle.Bold), ForeColor = Color.FromArgb(30, 60, 110), AutoSize = true, Location = new Point(145, 18) };
-        var lblSub = new Label { Text = "Taller Mecánico", Font = new Font("Segoe UI", 9), ForeColor = Color.Gray, AutoSize = true, Location = new Point(152, 52) };
+        var lblTitle = new Label { Text = "HEFESTO", Font = new Font("Segoe UI", 22, FontStyle.Bold), ForeColor = Color.FromArgb(30, 60, 110), AutoSize = true, Location = new Point(155, 20) };
+        var lblSub = new Label { Text = "Taller Mecánico", Font = new Font("Segoe UI", 9), ForeColor = Color.Gray, AutoSize = true, Location = new Point(162, 54) };
 
-        var lblUser = new Label { Text = "Usuario", Location = new Point(40, 85), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(60,60,60) };
-        txtUser.Location = new Point(40, 105); txtUser.Size = new Size(340, 32); txtUser.Font = new Font("Segoe UI", 11);
-        var lblPass = new Label { Text = "Contraseña", Location = new Point(40, 145), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(60,60,60) };
-        txtPass.Location = new Point(40, 165); txtPass.Size = new Size(340, 32); txtPass.Font = new Font("Segoe UI", 11);
+        var lblUser = new Label { Text = "Usuario", Location = new Point(40, 88), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(60,60,60) };
+        txtUser.Location = new Point(40, 108); txtUser.Size = new Size(360, 32); txtUser.Font = new Font("Segoe UI", 11);
+        var lblPass = new Label { Text = "Contraseña", Location = new Point(40, 152), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(60,60,60) };
+        txtPass.Location = new Point(40, 172); txtPass.Size = new Size(360, 32); txtPass.Font = new Font("Segoe UI", 11);
 
-        lblError.Location = new Point(40, 205); lblError.Size = new Size(340, 20);
+        lblError.Location = new Point(40, 212); lblError.Size = new Size(360, 20);
 
-        var btn = new Button { Text = "ENTRAR", Location = new Point(40, 235), Size = new Size(340, 42), BackColor = Color.FromArgb(30, 60, 110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Cursor = Cursors.Hand };
+        var btn = new Button { Text = "ENTRAR", Location = new Point(40, 245), Size = new Size(360, 44), BackColor = Color.FromArgb(30, 60, 110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Cursor = Cursors.Hand };
         btn.FlatAppearance.BorderSize = 0;
 
-        var lblHint = new Label { Text = "Por defecto:  admin  /  admin123", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(120,120,120), AutoSize = false, TextAlign = ContentAlignment.MiddleCenter, Location = new Point(40, 285), Size = new Size(340, 18), BackColor = Color.FromArgb(235,235,235) };
-        var lblDb = new Label { Text = $"Base: {Db.DbPath}", Font = new Font("Segoe UI", 6), ForeColor = Color.Gray, AutoSize = false, Location = new Point(10, 310), Size = new Size(400, 35) };
+        var lblHint = new Label { Text = "Por defecto:  admin  /  admin123", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(120,120,120), AutoSize = false, TextAlign = ContentAlignment.MiddleCenter, Location = new Point(40, 300), Size = new Size(360, 20), BackColor = Color.FromArgb(235,235,235) };
+        var lblDb = new Label { Text = $"Base: {Db.DbPath}", Font = new Font("Segoe UI", 6), ForeColor = Color.Gray, AutoSize = false, Location = new Point(10, 330), Size = new Size(420, 40) };
         lblDb.TextAlign = ContentAlignment.TopCenter;
 
         btn.Click += (s, e) => DoLogin();

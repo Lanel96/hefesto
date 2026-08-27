@@ -39,7 +39,7 @@ public class OrdenForm : Form
         main.RowStyles.Add(new RowStyle(SizeType.Percent, 33));   // pCat escalable
         main.RowStyles.Add(new RowStyle(SizeType.Percent, 33));   // pSel escalable
         main.RowStyles.Add(new RowStyle(SizeType.Percent, 34));   // pRep escalable
-        main.RowStyles.Add(new RowStyle(SizeType.Absolute, 110)); // footer fijo proporcionado
+        main.RowStyles.Add(new RowStyle(SizeType.Absolute, 125)); // footer 125 - evita corte cancelar a 125% DPI
 
         // 1 - Vehículo
         var pTop = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10), Margin = new Padding(0,0,0,6) };

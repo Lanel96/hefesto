@@ -123,11 +123,11 @@ public class MainForm : Form
     {
         var p = new TabPage("  🔧 CATÁLOGO SERVICIOS  ");
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
-        txtFiltroServ.Size = new Size(260, 30); txtFiltroServ.Margin = new Padding(0, 5, 8, 5);
+        txtFiltroServ.Size = new Size(260, 32); txtFiltroServ.Margin = new Padding(0, 6, 8, 6);
         txtFiltroServ.TextChanged += (s, e) => LoadServicios();
-        var btnAdd = MakeBtn("➕ Nuevo Servicio", Color.FromArgb(0, 150, 80), EditarServicio); btnAdd.Margin = new Padding(2, 4, 2, 4);
-        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvServ.CurrentRow == null) return; var id = Convert.ToInt32(dgvServ.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar servicio?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteServicio(id); LoadServicios(); } }); btnDel.Margin = new Padding(2, 4, 2, 4);
-        var lblInfo = new Label { Text = "Define tus precios aquí", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 10, 0, 0) };
+        var btnAdd = MakeBtn("➕ Nuevo Servicio", Color.FromArgb(0, 150, 80), EditarServicio); btnAdd.Size = new Size(155, 34); btnAdd.Margin = new Padding(2, 4, 2, 4);
+        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvServ.CurrentRow == null) return; var id = Convert.ToInt32(dgvServ.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar servicio?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteServicio(id); LoadServicios(); } }); btnDel.Size = new Size(125, 34); btnDel.Margin = new Padding(2, 4, 2, 4);
+        var lblInfo = new Label { Text = "Define tus precios aquí", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 12, 0, 0) };
         top.Controls.AddRange(new Control[] { txtFiltroServ, btnAdd, btnDel, lblInfo });
         p.Controls.Add(dgvServ); p.Controls.Add(top);
         dgvServ.DoubleClick += (s, e) => EditarServicio();
@@ -138,10 +138,10 @@ public class MainForm : Form
     {
         var p = new TabPage("  📜 BITÁCORA / GARANTÍAS  ");
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
-        txtFiltroBit.Size = new Size(260, 30); txtFiltroBit.Margin = new Padding(0, 5, 8, 5);
+        txtFiltroBit.Size = new Size(260, 32); txtFiltroBit.Margin = new Padding(0, 6, 8, 6);
         txtFiltroBit.TextChanged += (s, e) => LoadBitacora();
-        var btnRefresh = MakeBtn("🔄 Actualizar", Color.FromArgb(30, 60, 110), () => LoadBitacora()); btnRefresh.Margin = new Padding(2, 4, 2, 4);
-        var legend = new Label { Text = "Verde = EN GARANTÍA  |  Rojo = VENCIDA", ForeColor = Color.Gray, Font = new Font("Segoe UI", 8, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 10, 0, 0) };
+        var btnRefresh = MakeBtn("🔄 Actualizar", Color.FromArgb(30, 60, 110), () => LoadBitacora()); btnRefresh.Size = new Size(145, 34); btnRefresh.Margin = new Padding(2, 4, 2, 4);
+        var legend = new Label { Text = "Verde = EN GARANTÍA  |  Rojo = VENCIDA", ForeColor = Color.Gray, Font = new Font("Segoe UI", 8, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 12, 0, 0) };
         top.Controls.AddRange(new Control[] { txtFiltroBit, btnRefresh, legend });
         p.Controls.Add(dgvBit); p.Controls.Add(top);
         return p;
