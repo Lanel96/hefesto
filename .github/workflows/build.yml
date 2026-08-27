@@ -13,10 +13,10 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
@@ -30,16 +30,15 @@ jobs:
         shell: pwsh
         run: |
           $ver = "${{ github.ref_name }}".TrimStart('v')
-          if (-not $ver) { $ver = "0.0.1" }
+          if (-not $ver) { $ver = "0.0.2" }
           Copy-Item publish-hefesto/Hefesto.exe "publish-hefesto/Hefesto-v$ver.exe"
           Get-ChildItem publish-hefesto
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            publish-hefesto/Hefesto.exe
-            publish-hefesto/Hefesto-v*.exe
-          generate_release_notes: true
+      - name: Create Release (Node 24 compatible)
+        shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ver = "${{ github.ref_name }}"
+          if (-not $ver) { $ver = "v0.0.2" }
+          gh release create $ver --generate-notes --title $ver publish-hefesto/Hefesto.exe publish-hefesto/Hefesto-v*.exe
