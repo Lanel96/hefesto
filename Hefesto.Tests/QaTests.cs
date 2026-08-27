@@ -54,12 +54,21 @@ public class QaTests : IDisposable
         Assert.Equal(150m, edited.Precio);
     }
 
+    Servicio EnsureServicio()
+    {
+        var list = Repos.GetServicios();
+        if (list.Count > 0) return list[0];
+        var s = new Servicio(0, $"S-ENS-{Guid.NewGuid():N}".Substring(0,10), "Servicio Ens", "", 100m, 60);
+        Repos.SaveServicio(s);
+        return Repos.GetServicios(s.Codigo).First();
+    }
+
     [Fact]
     public void QA04_Orden_ConServiciosYRepuestos_TotalYGarantia()
     {
         var placa = $"QA{Guid.NewGuid():N}".Substring(0, 8).ToUpper();
         Repos.UpsertVehiculo(new Vehiculo(placa, "Mazda", "3", 2019, "Cliente Orden", "555-0002"));
-        var svc = Repos.GetServicios().First();
+        var svc = EnsureServicio();
         var orden = new Orden(0, placa, DateTime.Now, null, "Abierta", "QA obs", 0);
         decimal precioAplicado = svc.Precio + 10m;
         int id = Repos.CreateOrden(
@@ -137,7 +146,7 @@ public class QaTests : IDisposable
     {
         var placa = $"QC{Guid.NewGuid():N}".Substring(0, 8).ToUpper();
         Repos.UpsertVehiculo(new Vehiculo(placa, "Kia", "Rio", 2022, "Cli Est", "555-0004"));
-        var svc = Repos.GetServicios().First();
+        var svc = EnsureServicio();
         var id = Repos.CreateOrden(new Orden(0, placa, DateTime.Now, null, "Abierta", "", 0), new List<(int,string,decimal,int)>{(svc.Id, svc.Nombre, svc.Precio,1)}, new List<(string,string,int,DateTime)>());
         Repos.UpdateOrdenEstado(id, "Entregada", DateTime.Now);
         var o = Repos.GetOrdenes(placa).First(x=>x.Id==id);

@@ -28,17 +28,22 @@ public class MainForm : Form
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
 
-        // Header
+        // Header - responsive con TableLayout
         var header = new Panel { Height = 60, Dock = DockStyle.Top, BackColor = Color.FromArgb(30, 60, 110) };
-        var lblLogo = new Label { Text = "⚙ HEFESTO", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, AutoSize = true, Location = new Point(15, 15) };
-        var lblSub = new Label { Text = "Gestión de Órdenes • Vehículos • Servicios • Garantías", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = true, Location = new Point(16, 38) };
-        var lblVer = new Label { Text = $"v{Updater.CurrentVersion}", Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.FromArgb(255, 230, 100), AutoSize = true, Location = new Point(155, 22) };
-        var lblDb = new Label { Text = Db.DbPath, Font = new Font("Segoe UI", 7), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-        lblDb.Location = new Point(Width - 500, 22);
-        var btnUpdate = new Button { Text = "🔄 Actualizar", Size = new Size(110, 26), Location = new Point(Width - 135, 32), Anchor = AnchorStyles.Top | AnchorStyles.Right, BackColor = Color.FromArgb(255, 193, 7), ForeColor = Color.Black, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 7, FontStyle.Bold), Cursor = Cursors.Hand };
+        var lblLogo = new Label { Text = "⚙ HEFESTO", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, AutoSize = true, Location = new Point(15, 12) };
+        var lblSub = new Label { Text = "Gestión de Órdenes • Vehículos • Servicios • Garantías", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = true, Location = new Point(16, 36) };
+        var lblVer = new Label { Text = $"v{Updater.CurrentVersion}", Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.FromArgb(255, 230, 100), AutoSize = true, Location = new Point(155, 18) };
+        var lblDb = new Label { Text = Db.DbPath, Font = new Font("Segoe UI", 6), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = false, Size = new Size(380, 30), TextAlign = ContentAlignment.TopRight, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+        var btnUpdate = new Button { Text = "🔄 Actualizar", Size = new Size(110, 26), BackColor = Color.FromArgb(255, 193, 7), ForeColor = Color.Black, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 7, FontStyle.Bold), Cursor = Cursors.Hand, Anchor = AnchorStyles.Top | AnchorStyles.Right };
         btnUpdate.FlatAppearance.BorderSize = 0;
         btnUpdate.Click += async (s, e) => await CheckUpdatesAsync(false);
         header.Controls.AddRange(new Control[] { lblLogo, lblSub, lblVer, lblDb, btnUpdate });
+        header.Resize += (s, e) =>
+        {
+            lblDb.Location = new Point(Math.Max(220, header.Width - 500), 6);
+            lblDb.Size = new Size(Math.Min(380, header.Width - 240), 30);
+            btnUpdate.Location = new Point(header.Width - 125, 28);
+        };
         Controls.Add(header);
 
         tabs.ItemSize = new Size(120, 32);
@@ -79,14 +84,14 @@ public class MainForm : Form
     TabPage MakeOrdenesTab()
     {
         var p = new TabPage("  📋 ÓRDENES  ");
-        var top = new Panel { Height = 50, Dock = DockStyle.Top };
-        txtFiltroOrden.Size = new Size(280, 30); txtFiltroOrden.Location = new Point(5, 12);
+        var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
+        txtFiltroOrden.Size = new Size(260, 30); txtFiltroOrden.Margin = new Padding(0, 5, 8, 5);
         txtFiltroOrden.TextChanged += (s, e) => LoadOrdenes();
-        var btnNueva = MakeBtn("➕ Nueva Orden", Color.FromArgb(0, 150, 80), new Point(300, 8), () => { using var f = new OrdenForm(); if (f.ShowDialog() == DialogResult.OK) LoadOrdenes(); });
-        btnNueva.Size = new Size(150, 34);
-        var btnVer = MakeBtn("👁 Ver Detalle", Color.FromArgb(30, 60, 110), new Point(460, 8), VerDetalle);
-        var btnEstado = MakeBtn("🔄 Cambiar Estado", Color.FromArgb(200, 120, 0), new Point(590, 8), CambiarEstado);
-        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), new Point(730, 8), EliminarOrden);
+        var btnNueva = MakeBtn("➕ Nueva Orden", Color.FromArgb(0, 150, 80), () => { using var f = new OrdenForm(); if (f.ShowDialog() == DialogResult.OK) LoadOrdenes(); });
+        btnNueva.Size = new Size(145, 32); btnNueva.Margin = new Padding(2, 4, 2, 4);
+        var btnVer = MakeBtn("👁 Ver Detalle", Color.FromArgb(30, 60, 110), VerDetalle); btnVer.Margin = new Padding(2, 4, 2, 4);
+        var btnEstado = MakeBtn("🔄 Cambiar Estado", Color.FromArgb(200, 120, 0), CambiarEstado); btnEstado.Margin = new Padding(2, 4, 2, 4);
+        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), EliminarOrden); btnDel.Margin = new Padding(2, 4, 2, 4);
         top.Controls.AddRange(new Control[] { txtFiltroOrden, btnNueva, btnVer, btnEstado, btnDel });
         p.Controls.Add(dgvOrdenes); p.Controls.Add(top);
         dgvOrdenes.Dock = DockStyle.Fill;
@@ -97,11 +102,11 @@ public class MainForm : Form
     TabPage MakeVehiculosTab()
     {
         var p = new TabPage("  🚗 VEHÍCULOS  ");
-        var top = new Panel { Height = 50, Dock = DockStyle.Top };
-        txtFiltroVeh.Size = new Size(280, 30); txtFiltroVeh.Location = new Point(5, 12);
+        var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
+        txtFiltroVeh.Size = new Size(260, 30); txtFiltroVeh.Margin = new Padding(0, 5, 8, 5);
         txtFiltroVeh.TextChanged += (s, e) => LoadVehiculos();
-        var btnAdd = MakeBtn("➕ Nuevo / Editar", Color.FromArgb(0, 150, 80), new Point(300, 8), EditarVehiculo);
-        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), new Point(450, 8), () => { if (dgvVeh.CurrentRow == null) return; var placa = dgvVeh.CurrentRow.Cells["Placa"].Value!.ToString()!; if (MessageBox.Show($"¿Eliminar {placa}?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { try { Repos.DeleteVehiculo(placa); LoadVehiculos(); } catch (Exception ex) { MessageBox.Show(ex.Message); } } });
+        var btnAdd = MakeBtn("➕ Nuevo / Editar", Color.FromArgb(0, 150, 80), EditarVehiculo); btnAdd.Margin = new Padding(2, 4, 2, 4);
+        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvVeh.CurrentRow == null) return; var placa = dgvVeh.CurrentRow.Cells["Placa"].Value!.ToString()!; if (MessageBox.Show($"¿Eliminar {placa}?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { try { Repos.DeleteVehiculo(placa); LoadVehiculos(); } catch (Exception ex) { MessageBox.Show(ex.Message); } } }); btnDel.Margin = new Padding(2, 4, 2, 4);
         top.Controls.AddRange(new Control[] { txtFiltroVeh, btnAdd, btnDel });
         p.Controls.Add(dgvVeh); p.Controls.Add(top);
         dgvVeh.DoubleClick += (s, e) => EditarVehiculo();
@@ -111,12 +116,13 @@ public class MainForm : Form
     TabPage MakeServiciosTab()
     {
         var p = new TabPage("  🔧 CATÁLOGO SERVICIOS  ");
-        var top = new Panel { Height = 50, Dock = DockStyle.Top };
-        txtFiltroServ.Size = new Size(280, 30); txtFiltroServ.Location = new Point(5, 12);
+        var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
+        txtFiltroServ.Size = new Size(260, 30); txtFiltroServ.Margin = new Padding(0, 5, 8, 5);
         txtFiltroServ.TextChanged += (s, e) => LoadServicios();
-        var btnAdd = MakeBtn("➕ Nuevo / Editar", Color.FromArgb(0, 150, 80), new Point(300, 8), EditarServicio);
-        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), new Point(450, 8), () => { if (dgvServ.CurrentRow == null) return; var id = Convert.ToInt32(dgvServ.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar servicio?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteServicio(id); LoadServicios(); } });
-        top.Controls.AddRange(new Control[] { txtFiltroServ, btnAdd, btnDel });
+        var btnAdd = MakeBtn("➕ Nuevo Servicio", Color.FromArgb(0, 150, 80), EditarServicio); btnAdd.Margin = new Padding(2, 4, 2, 4);
+        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvServ.CurrentRow == null) return; var id = Convert.ToInt32(dgvServ.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar servicio?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteServicio(id); LoadServicios(); } }); btnDel.Margin = new Padding(2, 4, 2, 4);
+        var lblInfo = new Label { Text = "Define tus precios aquí", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 10, 0, 0) };
+        top.Controls.AddRange(new Control[] { txtFiltroServ, btnAdd, btnDel, lblInfo });
         p.Controls.Add(dgvServ); p.Controls.Add(top);
         dgvServ.DoubleClick += (s, e) => EditarServicio();
         return p;
@@ -125,13 +131,12 @@ public class MainForm : Form
     TabPage MakeBitacoraTab()
     {
         var p = new TabPage("  📜 BITÁCORA / GARANTÍAS  ");
-        var top = new Panel { Height = 50, Dock = DockStyle.Top };
-        txtFiltroBit.Size = new Size(280, 30); txtFiltroBit.Location = new Point(5, 12);
+        var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
+        txtFiltroBit.Size = new Size(260, 30); txtFiltroBit.Margin = new Padding(0, 5, 8, 5);
         txtFiltroBit.TextChanged += (s, e) => LoadBitacora();
-        var btnRefresh = MakeBtn("🔄 Actualizar", Color.FromArgb(30, 60, 110), new Point(300, 8), () => LoadBitacora());
-        top.Controls.AddRange(new Control[] { txtFiltroBit, btnRefresh });
-        var legend = new Label { Text = "Verde = EN GARANTÍA  |  Rojo = VENCIDA", ForeColor = Color.Gray, Font = new Font("Segoe UI", 8, FontStyle.Italic), AutoSize = true, Location = new Point(450, 17) };
-        top.Controls.Add(legend);
+        var btnRefresh = MakeBtn("🔄 Actualizar", Color.FromArgb(30, 60, 110), () => LoadBitacora()); btnRefresh.Margin = new Padding(2, 4, 2, 4);
+        var legend = new Label { Text = "Verde = EN GARANTÍA  |  Rojo = VENCIDA", ForeColor = Color.Gray, Font = new Font("Segoe UI", 8, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 10, 0, 0) };
+        top.Controls.AddRange(new Control[] { txtFiltroBit, btnRefresh, legend });
         p.Controls.Add(dgvBit); p.Controls.Add(top);
         return p;
     }
@@ -170,6 +175,11 @@ public class MainForm : Form
     Button MakeBtn(string text, Color bg, Point loc, Action act)
     {
         var b = new Button { Text = text, Location = loc, Size = new Size(120, 32), BackColor = bg, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        b.FlatAppearance.BorderSize = 0; b.Click += (s, e) => { try { act(); } catch (Exception ex) { MessageBox.Show($"Error: {ex.Message}\n\n{ex.StackTrace}"); } }; return b;
+    }
+    Button MakeBtn(string text, Color bg, Action act)
+    {
+        var b = new Button { Text = text, Size = new Size(120, 32), BackColor = bg, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
         b.FlatAppearance.BorderSize = 0; b.Click += (s, e) => { try { act(); } catch (Exception ex) { MessageBox.Show($"Error: {ex.Message}\n\n{ex.StackTrace}"); } }; return b;
     }
 

@@ -123,23 +123,8 @@ CREATE INDEX IF NOT EXISTS idx_repuestos_orden ON OrdenRepuestos(OrdenId);
             }
         }
 
-        // Servicios de ejemplo solo si tabla vacía
-        using var cmdCnt = conn.CreateCommand();
-        cmdCnt.CommandText = "SELECT COUNT(*) FROM Servicios";
-        var scnt = Convert.ToInt32(cmdCnt.ExecuteScalar());
-        if (scnt == 0)
-        {
-            using var cmd4 = conn.CreateCommand();
-            cmd4.CommandText = @"
-INSERT OR IGNORE INTO Servicios (Codigo, Nombre, Descripcion, Precio, DuracionMin) VALUES
- ('S001','Cambio de Aceite','Aceite 5W30 + filtro', 45.00, 30),
- ('S002','Alineación y Balanceo','Alineación 4 ruedas', 60.00, 60),
- ('S003','Frenos Delanteros','Pastillas + rectificado', 120.00, 90),
- ('S004','Diagnóstico Computarizado','Scanner OBD2', 25.00, 20),
- ('S005','Cambio Correa Distribución','Kit completo', 250.00, 180);
-";
-            cmd4.ExecuteNonQuery();
-        }
+        // Catálogo inicia vacío para que el taller defina sus propios precios (a petición del usuario)
+        // No se insertan servicios de ejemplo.
     }
 
     public static string Hash(string input)
