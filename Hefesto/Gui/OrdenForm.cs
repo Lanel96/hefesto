@@ -4,13 +4,13 @@ namespace Hefesto.Gui;
 
 public class OrdenForm : Form
 {
-    ComboBox cmbPlaca = new() { DropDownStyle = ComboBoxStyle.DropDownList };
-    TextBox txtCliente = new() { ReadOnly = true, BackColor = Color.FromArgb(240,240,240) };
-    DataGridView dgvServicios = new() { AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Height = 150 };
-    DataGridView dgvSeleccionados = new() { AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Height = 140 };
-    DataGridView dgvRepuestos = new() { AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Height = 120 };
-    Label lblTotal = new() { Font = new Font("Segoe UI", 12, FontStyle.Bold), ForeColor = Color.FromArgb(0,120,60), AutoSize = true };
-    TextBox txtObs = new() { PlaceholderText = "Observaciones de la orden (máx 200 caracteres)...", MaxLength = 200, BorderStyle = BorderStyle.FixedSingle };
+    ComboBox cmbPlaca = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat };
+    TextBox txtCliente = new() { ReadOnly = true, BackColor = Color.FromArgb(240,240,240), BorderStyle = BorderStyle.FixedSingle };
+    DataGridView dgvServicios = new() { AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Dock = DockStyle.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.FixedSingle, RowHeadersVisible = false, AllowUserToResizeRows = false };
+    DataGridView dgvSeleccionados = new() { AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Dock = DockStyle.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.FixedSingle, RowHeadersVisible = false };
+    DataGridView dgvRepuestos = new() { AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Dock = DockStyle.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.FixedSingle, RowHeadersVisible = false };
+    Label lblTotal = new() { Font = new Font("Segoe UI", 12, FontStyle.Bold), ForeColor = Color.FromArgb(0,120,60), AutoSize = true, TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill };
+    TextBox txtObs = new() { PlaceholderText = "Observaciones de la orden (máx 200 caracteres)...", MaxLength = 200, BorderStyle = BorderStyle.FixedSingle, Multiline = false };
 
     List<Servicio> catalogo = new();
     List<(Servicio s, int cant, decimal precio)> seleccion = new();
@@ -19,51 +19,40 @@ public class OrdenForm : Form
     public OrdenForm()
     {
         Text = "➕ Nueva Orden - Seleccione vehículo y servicios";
-        Size = new Size(980, 820);
-        MinimumSize = new Size(940, 640);
+        ClientSize = new Size(1020, 780);
+        MinimumSize = new Size(980, 700);
         StartPosition = FormStartPosition.CenterParent;
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
         AutoScaleMode = AutoScaleMode.Dpi;
+        AutoScaleDimensions = new SizeF(96F, 96F);
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = true;
         MinimizeBox = true;
+        DoubleBuffered = true;
+        AutoScroll = true;
 
-        // Footer - ahora dentro del scroll para que siempre sea visible via scroll (fix boton cortado)
-        var pBottom = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(12), Margin = new Padding(0) };
-        var lblObs = new Label { Text = "Observaciones:", Location = new Point(12, 6), AutoSize = true, Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.Gray };
-        txtObs.Location = new Point(12, 22); txtObs.Size = new Size(480, 28); txtObs.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right;
-        txtObs.BorderStyle = BorderStyle.FixedSingle;
-        var lblObsHint = new Label { Text = "200 máx", Location = new Point(495, 26), AutoSize = true, Font = new Font("Segoe UI", 6), ForeColor = Color.Gray };
-        txtObs.TextChanged += (s, e) => lblObsHint.Text = $"{txtObs.Text.Length}/200";
-        lblTotal.Location = new Point(520, 28); lblTotal.Text = "Total: $0.00"; lblTotal.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        var btnGuardar = new Button { Text = "💾 GUARDAR ORDEN", Location = new Point(740, 10), Size = new Size(190, 42), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Anchor = AnchorStyles.Top | AnchorStyles.Right };
-        var btnCancel = new Button { Text = "Cancelar", Location = new Point(740, 60), Size = new Size(190, 30), FlatStyle = FlatStyle.Flat, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-        btnCancel.Click += (s, e) => DialogResult = DialogResult.Cancel;
-        btnGuardar.Click += (s, e) => Guardar();
-        pBottom.Controls.AddRange(new Control[] { lblObs, txtObs, lblObsHint, lblTotal, btnGuardar, btnCancel });
+        // Layout principal - 6 filas escalables
+        var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 6, Padding = new Padding(8), BackColor = Color.White, AutoScroll = false };
+        main.RowStyles.Add(new RowStyle(SizeType.Absolute, 78));  // pTop
+        main.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));  // lblCat
+        main.RowStyles.Add(new RowStyle(SizeType.Percent, 33));   // pCat escalable
+        main.RowStyles.Add(new RowStyle(SizeType.Percent, 33));   // pSel escalable
+        main.RowStyles.Add(new RowStyle(SizeType.Percent, 34));   // pRep escalable
+        main.RowStyles.Add(new RowStyle(SizeType.Absolute, 110)); // footer fijo proporcionado
 
-        // Contenido scrollable - todo incluido para que footer scrolle si es necesario
-        var mainScroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.White, Padding = new Padding(0) };
-        var content = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 80));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 175));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 185));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 180));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 115));
-
-        var pTop = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10, 8, 10, 8), Margin = new Padding(0) };
-        var lblPlaca = new Label { Text = "Vehículo (Placa):", Dock = DockStyle.Top, Height = 16, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        // 1 - Vehículo
+        var pTop = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10), Margin = new Padding(0,0,0,6) };
+        var lblPlaca = new Label { Text = "Vehículo (Placa):", Dock = DockStyle.Top, Height = 18, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(30,60,110) };
         var tblTop = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
-        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170));
-        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 145));
+        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 175));
+        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
         tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        cmbPlaca.Dock = DockStyle.Fill; cmbPlaca.Height = 30; cmbPlaca.Margin = new Padding(0, 0, 6, 0); cmbPlaca.Font = new Font("Segoe UI", 9);
-        var btnNuevoVeh = new Button { Text = "🚗 Nuevo Vehículo", Dock = DockStyle.Fill, Height = 30, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 0, 6, 0), Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        cmbPlaca.Dock = DockStyle.Fill; cmbPlaca.Margin = new Padding(0,0,8,0); cmbPlaca.Font = new Font("Segoe UI", 9.5F);
+        var btnNuevoVeh = new Button { Text = "🚗 Nuevo Vehículo", Dock = DockStyle.Fill, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0,0,8,0), Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        btnNuevoVeh.FlatAppearance.BorderSize = 0;
         btnNuevoVeh.Click += (s, e) => { using var f = new VehiculoForm(null); if (f.ShowDialog() == DialogResult.OK) CargarVehiculos(); };
-        txtCliente.Dock = DockStyle.Fill; txtCliente.Height = 30; txtCliente.Margin = new Padding(0); txtCliente.BorderStyle = BorderStyle.FixedSingle;
-        txtCliente.Font = new Font("Segoe UI", 9); txtCliente.BackColor = Color.White;
+        txtCliente.Dock = DockStyle.Fill; txtCliente.Margin = new Padding(0); txtCliente.Font = new Font("Segoe UI", 9.5F);
         txtCliente.PlaceholderText = "Cliente / Marca Modelo";
         cmbPlaca.SelectedIndexChanged += (s, e) => ActualizarCliente();
         tblTop.Controls.Add(cmbPlaca, 0, 0);
@@ -71,49 +60,89 @@ public class OrdenForm : Form
         tblTop.Controls.Add(txtCliente, 2, 0);
         pTop.Controls.Add(tblTop);
         pTop.Controls.Add(lblPlaca);
-        lblPlaca.BringToFront();
 
-        var lblCat = new Label { Text = "1️⃣ Catálogo de Servicios (doble clic para agregar - precio editable al agregar)", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(30,60,110), Padding = new Padding(10, 4, 0, 0), Margin = new Padding(0) };
+        // 2 - Catálogo label
+        var lblCat = new Label { Text = "1️⃣ Catálogo de Servicios — doble clic para agregar (precio editable al agregar)", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(30,60,110), Padding = new Padding(6,0,0,0), BackColor = Color.FromArgb(235,240,255), Margin = new Padding(0,0,0,2) };
 
-        var pCat = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10,0,10,5), Margin = new Padding(0) };
-        var txtFiltro = new TextBox { PlaceholderText = "Filtrar servicios...", Dock = DockStyle.Top, Height = 28 };
+        // 3 - Catálogo grid
+        var pCat = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0), Margin = new Padding(0) };
+        var txtFiltro = new TextBox { PlaceholderText = "🔍 Filtrar servicios por código o nombre...", Dock = DockStyle.Top, Height = 30, Margin = new Padding(0,0,0,4), BorderStyle = BorderStyle.FixedSingle };
         txtFiltro.TextChanged += (s, e) => FiltrarServicios(txtFiltro.Text);
         dgvServicios.Dock = DockStyle.Fill;
         dgvServicios.DoubleClick += (s, e) => AgregarServicio();
+        // placeholder para empty
         pCat.Controls.Add(dgvServicios); pCat.Controls.Add(txtFiltro);
 
-        var pSel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10,0,10,5), Margin = new Padding(0) };
-        var lblSel = new Label { Text = "2️⃣ Servicios Seleccionados (precio congelado para esta orden)", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(0,120,60) };
-        var btnQuitar = new Button { Text = "Quitar seleccionado", Dock = DockStyle.Bottom, Height = 28, BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        // 4 - Seleccionados
+        var pSel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0), Margin = new Padding(0) };
+        var lblSel = new Label { Text = "2️⃣ Servicios Seleccionados — precio congelado para esta orden", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(0,120,60), Padding = new Padding(6,2,0,0), BackColor = Color.FromArgb(235,255,235) };
+        var btnQuitar = new Button { Text = "Quitar seleccionado", Dock = DockStyle.Bottom, Height = 30, BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 8) };
+        btnQuitar.FlatAppearance.BorderSize = 0;
         btnQuitar.Click += (s, e) => QuitarServicio();
         dgvSeleccionados.Dock = DockStyle.Fill;
         pSel.Controls.Add(dgvSeleccionados); pSel.Controls.Add(btnQuitar); pSel.Controls.Add(lblSel);
 
-        var pRep = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10,0,10,5), Margin = new Padding(0) };
-        var lblRep = new Label { Text = "3️⃣ Repuestos con Garantía (código + nombre + días) - opcional", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(150,80,0) };
-        var pRepInput = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 38, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(0,3,0,3), BackColor = Color.Transparent, AutoScroll = false };
-        var txtCod = new TextBox { PlaceholderText = "Código", Size = new Size(110, 26), BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0, 4, 5, 0) };
-        var txtNom = new TextBox { PlaceholderText = "Nombre repuesto", Size = new Size(210, 26), BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0, 4, 5, 0) };
-        var txtDias = new NumericUpDown { Minimum = 1, Maximum = 3650, Value = 90, Size = new Size(75, 26), Margin = new Padding(0, 4, 5, 0), BorderStyle = BorderStyle.FixedSingle };
-        var lblDias = new Label { Text = "días", AutoSize = true, Margin = new Padding(0, 8, 8, 0) };
-        var btnAddRep = new Button { Text = "Agregar", Size = new Size(85, 28), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 3, 5, 0) };
-        var btnDelRep = new Button { Text = "Quitar", Size = new Size(85, 28), BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 3, 0, 0) };
+        // 5 - Repuestos
+        var pRep = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0), Margin = new Padding(0) };
+        var lblRep = new Label { Text = "3️⃣ Repuestos con Garantía — código + nombre + días (opcional)", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(150,80,0), Padding = new Padding(6,2,0,0), BackColor = Color.FromArgb(255,245,220) };
+        var pRepInput = new TableLayoutPanel { Dock = DockStyle.Top, Height = 40, ColumnCount = 6, RowCount = 1, Padding = new Padding(0,4,0,4), BackColor = Color.Transparent };
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 85));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 50));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
+        var txtCod = new TextBox { PlaceholderText = "Código", Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0,0,6,0) };
+        var txtNom = new TextBox { PlaceholderText = "Nombre repuesto", Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0,0,6,0) };
+        var txtDias = new NumericUpDown { Minimum = 1, Maximum = 3650, Value = 90, Dock = DockStyle.Fill, Margin = new Padding(0,0,4,0), BorderStyle = BorderStyle.FixedSingle, TextAlign = HorizontalAlignment.Center };
+        var lblDias = new Label { Text = "días", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, AutoSize = false };
+        var btnAddRep = new Button { Text = "Agregar", Dock = DockStyle.Fill, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0,0,6,0), Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        var btnDelRep = new Button { Text = "Quitar", Dock = DockStyle.Fill, BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0), Font = new Font("Segoe UI", 8) };
         btnAddRep.FlatAppearance.BorderSize = 0; btnDelRep.FlatAppearance.BorderSize = 0;
         btnAddRep.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtCod.Text) || string.IsNullOrWhiteSpace(txtNom.Text)) { MessageBox.Show("Código y nombre requeridos"); return; } repuestos.Add((txtCod.Text.Trim(), txtNom.Text.Trim(), (int)txtDias.Value, DateTime.Now)); RefreshRepuestos(); txtCod.Clear(); txtNom.Clear(); };
         btnDelRep.Click += (s, e) => { if (dgvRepuestos.CurrentRow != null) { repuestos.RemoveAt(dgvRepuestos.CurrentRow.Index); RefreshRepuestos(); } };
-        pRepInput.Controls.AddRange(new Control[] { txtCod, txtNom, txtDias, lblDias, btnAddRep, btnDelRep });
+        pRepInput.Controls.Add(txtCod, 0, 0); pRepInput.Controls.Add(txtNom, 1, 0); pRepInput.Controls.Add(txtDias, 2, 0); pRepInput.Controls.Add(lblDias, 3, 0); pRepInput.Controls.Add(btnAddRep, 4, 0); pRepInput.Controls.Add(btnDelRep, 5, 0);
         dgvRepuestos.Dock = DockStyle.Fill;
         pRep.Controls.Add(dgvRepuestos); pRep.Controls.Add(pRepInput); pRep.Controls.Add(lblRep);
 
-        content.Controls.Add(pTop, 0, 0);
-        content.Controls.Add(lblCat, 0, 1);
-        content.Controls.Add(pCat, 0, 2);
-        content.Controls.Add(pSel, 0, 3);
-        content.Controls.Add(pRep, 0, 4);
-        content.Controls.Add(pBottom, 0, 5);
-        mainScroll.Controls.Add(content);
+        // 6 - Footer - TableLayout proporcionado 50% obs | 15% total | 35% botones
+        var pBottom = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10), Margin = new Padding(0,6,0,0) };
+        pBottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 52));
+        pBottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18));
+        pBottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
+        var pObsWrap = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0), Margin = new Padding(0,0,8,0), BackColor = Color.Transparent };
+        var lblObs = new Label { Text = "Observaciones:", Dock = DockStyle.Top, Height = 16, Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.Gray };
+        txtObs.Dock = DockStyle.Fill; txtObs.Margin = new Padding(0,2,0,0);
+        var lblObsHint = new Label { Text = "0/200", Dock = DockStyle.Bottom, Height = 14, Font = new Font("Segoe UI", 6), ForeColor = Color.Gray, TextAlign = ContentAlignment.MiddleRight };
+        txtObs.TextChanged += (s, e) => lblObsHint.Text = $"{txtObs.Text.Length}/200";
+        pObsWrap.Controls.Add(txtObs); pObsWrap.Controls.Add(lblObsHint); pObsWrap.Controls.Add(lblObs);
+        // total centrado
+        var pTotalWrap = new Panel { Dock = DockStyle.Fill, Padding = new Padding(4), BackColor = Color.Transparent };
+        lblTotal.Dock = DockStyle.Fill; lblTotal.TextAlign = ContentAlignment.MiddleCenter; lblTotal.Text = "Total: $0.00";
+        pTotalWrap.Controls.Add(lblTotal);
+        // botones
+        var pBtns = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(0), Margin = new Padding(0) };
+        pBtns.RowStyles.Add(new RowStyle(SizeType.Percent, 55));
+        pBtns.RowStyles.Add(new RowStyle(SizeType.Percent, 45));
+        var btnGuardar = new Button { Text = "💾 GUARDAR ORDEN", Dock = DockStyle.Fill, BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Margin = new Padding(0,0,0,4) };
+        var btnCancel = new Button { Text = "Cancelar", Dock = DockStyle.Fill, FlatStyle = FlatStyle.Flat, Margin = new Padding(0,4,0,0) };
+        btnGuardar.FlatAppearance.BorderSize = 0;
+        btnCancel.Click += (s, e) => DialogResult = DialogResult.Cancel;
+        btnGuardar.Click += (s, e) => Guardar();
+        pBtns.Controls.Add(btnGuardar, 0, 0);
+        pBtns.Controls.Add(btnCancel, 0, 1);
+        pBottom.Controls.Add(pObsWrap, 0, 0);
+        pBottom.Controls.Add(pTotalWrap, 1, 0);
+        pBottom.Controls.Add(pBtns, 2, 0);
 
-        Controls.Add(mainScroll);
+        main.Controls.Add(pTop, 0, 0);
+        main.Controls.Add(lblCat, 0, 1);
+        main.Controls.Add(pCat, 0, 2);
+        main.Controls.Add(pSel, 0, 3);
+        main.Controls.Add(pRep, 0, 4);
+        main.Controls.Add(pBottom, 0, 5);
+
+        Controls.Add(main);
 
         CargarVehiculos(); CargarCatalogo();
     }
