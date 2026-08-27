@@ -10,7 +10,7 @@ public class OrdenForm : Form
     DataGridView dgvSeleccionados = new() { AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Height = 140 };
     DataGridView dgvRepuestos = new() { AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Height = 120 };
     Label lblTotal = new() { Font = new Font("Segoe UI", 12, FontStyle.Bold), ForeColor = Color.FromArgb(0,120,60), AutoSize = true };
-    TextBox txtObs = new() { PlaceholderText = "Observaciones de la orden..." };
+    TextBox txtObs = new() { PlaceholderText = "Observaciones de la orden (máx 200 caracteres)...", MaxLength = 200, BorderStyle = BorderStyle.FixedSingle };
 
     List<Servicio> catalogo = new();
     List<(Servicio s, int cant, decimal precio)> seleccion = new();
@@ -19,72 +19,89 @@ public class OrdenForm : Form
     public OrdenForm()
     {
         Text = "➕ Nueva Orden - Seleccione vehículo y servicios";
-        Size = new Size(960, 820);
-        MinimumSize = new Size(920, 680);
+        Size = new Size(980, 820);
+        MinimumSize = new Size(940, 640);
         StartPosition = FormStartPosition.CenterParent;
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
-        AutoScroll = true;
+        AutoScaleMode = AutoScaleMode.Dpi;
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = true;
         MinimizeBox = true;
-        AutoScaleMode = AutoScaleMode.Dpi;
 
-        var pTop = new Panel { Dock = DockStyle.Top, Height = 80, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10) };
+        // Footer fijo siempre visible
+        var pBottom = new Panel { Dock = DockStyle.Bottom, Height = 110, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(12) };
+        var lblObs = new Label { Text = "Observaciones:", Location = new Point(12, 6), AutoSize = true, Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.Gray };
+        txtObs.Location = new Point(12, 22); txtObs.Size = new Size(480, 28); txtObs.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right;
+        txtObs.BorderStyle = BorderStyle.FixedSingle;
+        var lblObsHint = new Label { Text = "200 máx", Location = new Point(495, 26), AutoSize = true, Font = new Font("Segoe UI", 6), ForeColor = Color.Gray };
+        txtObs.TextChanged += (s, e) => lblObsHint.Text = $"{txtObs.Text.Length}/200";
+        lblTotal.Location = new Point(520, 28); lblTotal.Text = "Total: $0.00"; lblTotal.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        var btnGuardar = new Button { Text = "💾 GUARDAR ORDEN", Location = new Point(740, 10), Size = new Size(190, 42), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+        var btnCancel = new Button { Text = "Cancelar", Location = new Point(740, 60), Size = new Size(190, 30), FlatStyle = FlatStyle.Flat, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+        btnCancel.Click += (s, e) => DialogResult = DialogResult.Cancel;
+        btnGuardar.Click += (s, e) => Guardar();
+        pBottom.Controls.AddRange(new Control[] { lblObs, txtObs, lblObsHint, lblTotal, btnGuardar, btnCancel });
+
+        // Contenido scrollable
+        var mainScroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.White, Padding = new Padding(0) };
+        var content = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 80));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 175));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 185));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 180));
+
+        var pTop = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10), Margin = new Padding(0) };
         var lblPlaca = new Label { Text = "Vehículo (Placa):", Location = new Point(10, 10), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
         cmbPlaca.Location = new Point(10, 30); cmbPlaca.Size = new Size(160, 28);
         var btnNuevoVeh = new Button { Text = "🚗 Nuevo Vehículo", Location = new Point(175, 30), Size = new Size(130, 28), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
         btnNuevoVeh.Click += (s, e) => { using var f = new VehiculoForm(null); if (f.ShowDialog() == DialogResult.OK) CargarVehiculos(); };
-        txtCliente.Location = new Point(315, 30); txtCliente.Size = new Size(300, 28); txtCliente.PlaceholderText = "Cliente / Marca Modelo";
+        txtCliente.Location = new Point(315, 30); txtCliente.Size = new Size(320, 28); txtCliente.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+        txtCliente.PlaceholderText = "Cliente / Marca Modelo";
         cmbPlaca.SelectedIndexChanged += (s, e) => ActualizarCliente();
         pTop.Controls.AddRange(new Control[] { lblPlaca, cmbPlaca, btnNuevoVeh, txtCliente });
 
-        // Catálogo
-        var lblCat = new Label { Text = "1️⃣ Catálogo de Servicios (doble clic para agregar - precio editable al agregar)", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(30,60,110) };
-        var pCat = new Panel { Dock = DockStyle.Top, Height = 170, Padding = new Padding(10,0,10,0) };
+        var lblCat = new Label { Text = "1️⃣ Catálogo de Servicios (doble clic para agregar - precio editable al agregar)", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(30,60,110), Padding = new Padding(10, 4, 0, 0), Margin = new Padding(0) };
+
+        var pCat = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10,0,10,5), Margin = new Padding(0) };
         var txtFiltro = new TextBox { PlaceholderText = "Filtrar servicios...", Dock = DockStyle.Top, Height = 28 };
         txtFiltro.TextChanged += (s, e) => FiltrarServicios(txtFiltro.Text);
         dgvServicios.Dock = DockStyle.Fill;
         dgvServicios.DoubleClick += (s, e) => AgregarServicio();
         pCat.Controls.Add(dgvServicios); pCat.Controls.Add(txtFiltro);
 
-        // Seleccionados
-        var pSel = new Panel { Dock = DockStyle.Top, Height = 180, Padding = new Padding(10,0,10,0) };
+        var pSel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10,0,10,5), Margin = new Padding(0) };
         var lblSel = new Label { Text = "2️⃣ Servicios Seleccionados (precio congelado para esta orden)", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(0,120,60) };
-        var btnQuitar = new Button { Text = "Quitar", Dock = DockStyle.Bottom, Height = 28, BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        var btnQuitar = new Button { Text = "Quitar seleccionado", Dock = DockStyle.Bottom, Height = 28, BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
         btnQuitar.Click += (s, e) => QuitarServicio();
         dgvSeleccionados.Dock = DockStyle.Fill;
         pSel.Controls.Add(dgvSeleccionados); pSel.Controls.Add(btnQuitar); pSel.Controls.Add(lblSel);
 
-        // Repuestos garantía
-        var pRep = new Panel { Dock = DockStyle.Top, Height = 175, Padding = new Padding(10,0,10,0) };
+        var pRep = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10,0,10,5), Margin = new Padding(0) };
         var lblRep = new Label { Text = "3️⃣ Repuestos con Garantía (código + nombre + días) - opcional", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(150,80,0) };
-        var pRepInput = new Panel { Dock = DockStyle.Top, Height = 32 };
-        var txtCod = new TextBox { PlaceholderText = "Código", Location = new Point(0, 3), Size = new Size(100, 26) };
-        var txtNom = new TextBox { PlaceholderText = "Nombre repuesto", Location = new Point(105, 3), Size = new Size(200, 26) };
-        var txtDias = new NumericUpDown { Minimum = 1, Maximum = 3650, Value = 90, Location = new Point(310, 3), Size = new Size(70, 26) };
-        var lblDias = new Label { Text = "días", Location = new Point(385, 7), AutoSize = true };
-        var btnAddRep = new Button { Text = "Agregar", Location = new Point(420, 3), Size = new Size(80, 26), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-        var btnDelRep = new Button { Text = "Quitar", Location = new Point(505, 3), Size = new Size(80, 26), BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        var pRepInput = new Panel { Dock = DockStyle.Top, Height = 36, Padding = new Padding(0,3,0,3) };
+        var txtCod = new TextBox { PlaceholderText = "Código", Location = new Point(0, 4), Size = new Size(110, 26), BorderStyle = BorderStyle.FixedSingle };
+        var txtNom = new TextBox { PlaceholderText = "Nombre repuesto", Location = new Point(115, 4), Size = new Size(210, 26), BorderStyle = BorderStyle.FixedSingle };
+        var txtDias = new NumericUpDown { Minimum = 1, Maximum = 3650, Value = 90, Location = new Point(330, 4), Size = new Size(75, 26) };
+        var lblDias = new Label { Text = "días", Location = new Point(410, 8), AutoSize = true };
+        var btnAddRep = new Button { Text = "Agregar", Location = new Point(445, 4), Size = new Size(85, 26), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        var btnDelRep = new Button { Text = "Quitar", Location = new Point(535, 4), Size = new Size(85, 26), BackColor = Color.FromArgb(180,40,40), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
         btnAddRep.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtCod.Text) || string.IsNullOrWhiteSpace(txtNom.Text)) { MessageBox.Show("Código y nombre requeridos"); return; } repuestos.Add((txtCod.Text.Trim(), txtNom.Text.Trim(), (int)txtDias.Value, DateTime.Now)); RefreshRepuestos(); txtCod.Clear(); txtNom.Clear(); };
         btnDelRep.Click += (s, e) => { if (dgvRepuestos.CurrentRow != null) { repuestos.RemoveAt(dgvRepuestos.CurrentRow.Index); RefreshRepuestos(); } };
         pRepInput.Controls.AddRange(new Control[] { txtCod, txtNom, txtDias, lblDias, btnAddRep, btnDelRep });
         dgvRepuestos.Dock = DockStyle.Fill;
         pRep.Controls.Add(dgvRepuestos); pRep.Controls.Add(pRepInput); pRep.Controls.Add(lblRep);
 
-        // Bottom - altura aumentada a 105 para no cortar en DPI 125% y con AutoScroll
-        var pBottom = new Panel { Dock = DockStyle.Bottom, Height = 105, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(12) };
-        txtObs.Location = new Point(12, 14); txtObs.Size = new Size(460, 30); txtObs.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-        lblTotal.Location = new Point(485, 18); lblTotal.Text = "Total: $0.00"; lblTotal.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        var btnGuardar = new Button { Text = "💾 GUARDAR ORDEN", Location = new Point(720, 10), Size = new Size(190, 42), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Anchor = AnchorStyles.Top | AnchorStyles.Right };
-        var btnCancel = new Button { Text = "Cancelar", Location = new Point(720, 60), Size = new Size(190, 28), FlatStyle = FlatStyle.Flat, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-        btnCancel.Click += (s, e) => DialogResult = DialogResult.Cancel;
-        btnGuardar.Click += (s, e) => Guardar();
-        pBottom.Controls.AddRange(new Control[] { txtObs, lblTotal, btnGuardar, btnCancel });
+        content.Controls.Add(pTop, 0, 0);
+        content.Controls.Add(lblCat, 0, 1);
+        content.Controls.Add(pCat, 0, 2);
+        content.Controls.Add(pSel, 0, 3);
+        content.Controls.Add(pRep, 0, 4);
+        mainScroll.Controls.Add(content);
 
-        // Orden de Dock: Bottom primero, luego Top en orden inverso para que no se tapen
+        Controls.Add(mainScroll);
         Controls.Add(pBottom);
-        Controls.Add(pRep); Controls.Add(pSel); Controls.Add(pCat); Controls.Add(lblCat); Controls.Add(pTop);
 
         CargarVehiculos(); CargarCatalogo();
     }
@@ -143,12 +160,12 @@ public class PrecioForm : Form
     public int Cantidad { get; private set; } = 1;
     public PrecioForm(string nombre, decimal precioActual)
     {
-        Text = nombre; Size = new Size(320, 180); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
+        Text = nombre; Size = new Size(340, 190); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false;
         var lbl = new Label { Text = "Precio a aplicar (editable):", Location = new Point(15, 15), AutoSize = true };
-        var txtPrecio = new NumericUpDown { Location = new Point(15, 35), Size = new Size(270, 28), DecimalPlaces = 2, Maximum = 100000, Minimum = 0, Value = precioActual, Font = new Font("Segoe UI", 11) };
+        var txtPrecio = new NumericUpDown { Location = new Point(15, 35), Size = new Size(290, 28), DecimalPlaces = 2, Maximum = 100000, Minimum = 0, Value = precioActual, Font = new Font("Segoe UI", 11) };
         var lblCant = new Label { Text = "Cantidad:", Location = new Point(15, 70), AutoSize = true };
         var txtCant = new NumericUpDown { Location = new Point(15, 90), Size = new Size(100, 28), Minimum = 1, Maximum = 100, Value = 1 };
-        var btn = new Button { Text = "Agregar", Location = new Point(15, 125), Size = new Size(270, 30), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        var btn = new Button { Text = "Agregar", Location = new Point(15, 130), Size = new Size(290, 32), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
         btn.Click += (s, e) => { Precio = txtPrecio.Value; Cantidad = (int)txtCant.Value; DialogResult = DialogResult.OK; };
         Controls.AddRange(new Control[] { lbl, txtPrecio, lblCant, txtCant, btn });
     }
