@@ -52,15 +52,25 @@ public class OrdenForm : Form
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 185));
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 180));
 
-        var pTop = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10), Margin = new Padding(0) };
-        var lblPlaca = new Label { Text = "Vehículo (Placa):", Location = new Point(10, 10), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
-        cmbPlaca.Location = new Point(10, 30); cmbPlaca.Size = new Size(160, 28);
-        var btnNuevoVeh = new Button { Text = "🚗 Nuevo Vehículo", Location = new Point(175, 30), Size = new Size(130, 28), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+        var pTop = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10, 8, 10, 8), Margin = new Padding(0) };
+        var lblPlaca = new Label { Text = "Vehículo (Placa):", Dock = DockStyle.Top, Height = 16, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        var tblTop = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
+        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170));
+        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 145));
+        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        cmbPlaca.Dock = DockStyle.Fill; cmbPlaca.Height = 30; cmbPlaca.Margin = new Padding(0, 0, 6, 0); cmbPlaca.Font = new Font("Segoe UI", 9);
+        var btnNuevoVeh = new Button { Text = "🚗 Nuevo Vehículo", Dock = DockStyle.Fill, Height = 30, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 0, 6, 0), Font = new Font("Segoe UI", 8, FontStyle.Bold) };
         btnNuevoVeh.Click += (s, e) => { using var f = new VehiculoForm(null); if (f.ShowDialog() == DialogResult.OK) CargarVehiculos(); };
-        txtCliente.Location = new Point(315, 30); txtCliente.Size = new Size(320, 28); txtCliente.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+        txtCliente.Dock = DockStyle.Fill; txtCliente.Height = 30; txtCliente.Margin = new Padding(0); txtCliente.BorderStyle = BorderStyle.FixedSingle;
+        txtCliente.Font = new Font("Segoe UI", 9); txtCliente.BackColor = Color.White;
         txtCliente.PlaceholderText = "Cliente / Marca Modelo";
         cmbPlaca.SelectedIndexChanged += (s, e) => ActualizarCliente();
-        pTop.Controls.AddRange(new Control[] { lblPlaca, cmbPlaca, btnNuevoVeh, txtCliente });
+        tblTop.Controls.Add(cmbPlaca, 0, 0);
+        tblTop.Controls.Add(btnNuevoVeh, 1, 0);
+        tblTop.Controls.Add(txtCliente, 2, 0);
+        pTop.Controls.Add(tblTop);
+        pTop.Controls.Add(lblPlaca);
+        lblPlaca.BringToFront();
 
         var lblCat = new Label { Text = "1️⃣ Catálogo de Servicios (doble clic para agregar - precio editable al agregar)", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(30,60,110), Padding = new Padding(10, 4, 0, 0), Margin = new Padding(0) };
 
