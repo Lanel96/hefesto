@@ -34,11 +34,16 @@ jobs:
           Copy-Item publish-hefesto/Hefesto.exe "publish-hefesto/Hefesto-v$ver.exe"
           Get-ChildItem publish-hefesto
 
-      - name: Create Release (Node 24 compatible)
+      - name: Create Release (Node 24 compatible - idempotente)
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $ver = "${{ github.ref_name }}"
-          if (-not $ver) { $ver = "v0.0.2" }
-          gh release create $ver --generate-notes --title $ver publish-hefesto/Hefesto.exe publish-hefesto/Hefesto-v*.exe
+          if (-not $ver) { $ver = "v0.0.3" }
+          if (gh release view $ver --json tagName 2>$null) {
+            Write-Host "Release $ver ya existe, subiendo assets con --clobber..."
+            gh release upload $ver publish-hefesto/Hefesto.exe publish-hefesto/Hefesto-v*.exe --clobber
+          } else {
+            gh release create $ver --generate-notes --title $ver publish-hefesto/Hefesto.exe publish-hefesto/Hefesto-v*.exe
+          }
