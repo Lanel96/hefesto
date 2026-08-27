@@ -56,12 +56,6 @@ public class MainForm : Form
         tabs.BringToFront();
         header.BringToFront();
 
-        // Carga segura con try/catch para que no se cierre silencioso (QA)
-        SafeLoad(LoadOrdenes, "Órdenes");
-        SafeLoad(LoadVehiculos, "Vehículos");
-        SafeLoad(LoadServicios, "Servicios");
-        SafeLoad(LoadBitacora, "Bitácora");
-        SafeLoad(LoadUsuarios, "Usuarios");
         tabs.SelectedIndexChanged += (s, e) =>
         {
             if (tabs.SelectedIndex == 0) SafeLoad(LoadOrdenes, "Órdenes");
@@ -70,6 +64,16 @@ public class MainForm : Form
             if (tabs.SelectedIndex == 3) SafeLoad(LoadBitacora, "Bitácora");
         };
         Shown += async (s, e) => await CheckUpdatesAsync(true);
+    }
+
+    protected override void OnLoad(EventArgs e)
+    {
+        base.OnLoad(e);
+        SafeLoad(LoadOrdenes, "Órdenes");
+        SafeLoad(LoadVehiculos, "Vehículos");
+        SafeLoad(LoadServicios, "Servicios");
+        SafeLoad(LoadBitacora, "Bitácora");
+        SafeLoad(LoadUsuarios, "Usuarios");
     }
 
     TabPage MakeOrdenesTab()
@@ -173,7 +177,11 @@ public class MainForm : Form
     {
         var data = Repos.GetOrdenes(txtFiltroOrden.Text);
         dgvOrdenes.DataSource = data.Select(o => new { o.Id, o.Placa, Fecha_Ingreso = o.FechaIngreso.ToString("dd/MM/yyyy HH:mm"), Fecha_Entrega = o.FechaEntrega?.ToString("dd/MM/yyyy") ?? "-", o.Estado, Total = o.Total.ToString("C"), o.Observaciones }).ToList();
-        if (dgvOrdenes.Columns["Id"] != null) dgvOrdenes.Columns["Id"]!.Width = 50;
+        // Ajuste de ancho diferido y seguro (handle debe existir)
+        if (dgvOrdenes.IsHandleCreated && dgvOrdenes.Columns["Id"] != null)
+        {
+            try { dgvOrdenes.Columns["Id"]!.Width = 50; } catch { }
+        }
     }
     void LoadVehiculos()
     {
@@ -182,7 +190,10 @@ public class MainForm : Form
     void LoadServicios()
     {
         dgvServ.DataSource = Repos.GetServicios(txtFiltroServ.Text).Select(s => new { s.Id, s.Codigo, s.Nombre, s.Descripcion, Precio = s.Precio.ToString("C"), Duración = s.DuracionMin + " min" }).ToList();
-        if (dgvServ.Columns["Id"] != null) dgvServ.Columns["Id"]!.Width = 40;
+        if (dgvServ.IsHandleCreated && dgvServ.Columns["Id"] != null)
+        {
+            try { dgvServ.Columns["Id"]!.Width = 40; } catch { }
+        }
     }
     void LoadBitacora()
     {
