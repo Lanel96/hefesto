@@ -29,8 +29,8 @@ public class OrdenForm : Form
         MaximizeBox = true;
         MinimizeBox = true;
 
-        // Footer fijo siempre visible
-        var pBottom = new Panel { Dock = DockStyle.Bottom, Height = 110, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(12) };
+        // Footer - ahora dentro del scroll para que siempre sea visible via scroll (fix boton cortado)
+        var pBottom = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(12), Margin = new Padding(0) };
         var lblObs = new Label { Text = "Observaciones:", Location = new Point(12, 6), AutoSize = true, Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.Gray };
         txtObs.Location = new Point(12, 22); txtObs.Size = new Size(480, 28); txtObs.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right;
         txtObs.BorderStyle = BorderStyle.FixedSingle;
@@ -43,7 +43,7 @@ public class OrdenForm : Form
         btnGuardar.Click += (s, e) => Guardar();
         pBottom.Controls.AddRange(new Control[] { lblObs, txtObs, lblObsHint, lblTotal, btnGuardar, btnCancel });
 
-        // Contenido scrollable
+        // Contenido scrollable - todo incluido para que footer scrolle si es necesario
         var mainScroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.White, Padding = new Padding(0) };
         var content = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 80));
@@ -51,6 +51,7 @@ public class OrdenForm : Form
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 175));
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 185));
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 180));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 115));
 
         var pTop = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10, 8, 10, 8), Margin = new Padding(0) };
         var lblPlaca = new Label { Text = "Vehículo (Placa):", Dock = DockStyle.Top, Height = 16, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
@@ -108,10 +109,10 @@ public class OrdenForm : Form
         content.Controls.Add(pCat, 0, 2);
         content.Controls.Add(pSel, 0, 3);
         content.Controls.Add(pRep, 0, 4);
+        content.Controls.Add(pBottom, 0, 5);
         mainScroll.Controls.Add(content);
 
         Controls.Add(mainScroll);
-        Controls.Add(pBottom);
 
         CargarVehiculos(); CargarCatalogo();
     }
