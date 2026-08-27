@@ -8,7 +8,7 @@ public static class Updater
 {
     // CONFIGURA AQUÍ tu repo después de crearlo en GitHub
     // ej: "tu-usuario/hefesto-taller"
-    public static string Repo = "TU_USUARIO/hefesto"; // <-- CAMBIAR
+    public static string Repo = "Lanel96/hefesto";
 
     public static string CurrentVersion => Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.1";
 
