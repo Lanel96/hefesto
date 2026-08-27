@@ -1,0 +1,45 @@
+name: Build Hefesto
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore Hefesto/Hefesto.slnx
+
+      - name: Publish Hefesto (SingleFile)
+        run: dotnet publish Hefesto/Gui/Hefesto.Gui.csproj -c Release -o publish-hefesto --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+
+      - name: Rename exe with version
+        shell: pwsh
+        run: |
+          $ver = "${{ github.ref_name }}".TrimStart('v')
+          if (-not $ver) { $ver = "0.0.1" }
+          Copy-Item publish-hefesto/Hefesto.exe "publish-hefesto/Hefesto-v$ver.exe"
+          Get-ChildItem publish-hefesto
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            publish-hefesto/Hefesto.exe
+            publish-hefesto/Hefesto-v*.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

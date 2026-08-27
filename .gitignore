@@ -1,0 +1,22 @@
+# Build
+bin/
+obj/
+publish/
+publish-gui/
+publish-hefesto/
+hefesto.db
+hefesto.db-*
+*.db
+*.db-shm
+*.db-wal
+
+# User files
+.vs/
+.idea/
+*.user
+*.suo
+appsettings.local.json
+
+# Temp test
+HefestoTest.csproj
+ProgramTest.cs

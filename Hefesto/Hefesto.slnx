@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="Core/Hefesto.Core.csproj" />
+  </Folder>
+  <Folder Name="/Gui/">
+    <Project Path="Gui/Hefesto.Gui.csproj" />
+  </Folder>
+</Solution>
