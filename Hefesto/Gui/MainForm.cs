@@ -30,21 +30,18 @@ public class MainForm : Form
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
 
-        // Header - TableLayout evita que tape botones (fix screenshot)
+        // Header - sin leyenda de ruta (petición usuario) y TableLayout para no tapar
         var header = new Panel { Height = 78, Dock = DockStyle.Fill, BackColor = Color.FromArgb(30, 60, 110) };
         var lblLogo = new Label { Text = "⚙ HEFESTO", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, AutoSize = true, Location = new Point(15, 12) };
         var lblSub = new Label { Text = "Gestión de Órdenes • Vehículos • Servicios • Garantías", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = true, Location = new Point(16, 36) };
         var lblVer = new Label { Text = $"v{Updater.CurrentVersion}", Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.FromArgb(255, 230, 100), AutoSize = true, Location = new Point(155, 18) };
-        var lblDb = new Label { Text = Db.DbPath, Font = new Font("Segoe UI", 6), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = false, Size = new Size(380, 30), TextAlign = ContentAlignment.TopRight, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-        var btnUpdate = new Button { Text = "🔄 Actualizar", Size = new Size(110, 26), BackColor = Color.FromArgb(255, 193, 7), ForeColor = Color.Black, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 7, FontStyle.Bold), Cursor = Cursors.Hand, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+        var btnUpdate = new Button { Text = "🔄 Actualizar", Size = new Size(115, 28), BackColor = Color.FromArgb(255, 193, 7), ForeColor = Color.Black, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 8, FontStyle.Bold), Cursor = Cursors.Hand, Anchor = AnchorStyles.Top | AnchorStyles.Right };
         btnUpdate.FlatAppearance.BorderSize = 0;
         btnUpdate.Click += async (s, e) => await CheckUpdatesAsync(false);
-        header.Controls.AddRange(new Control[] { lblLogo, lblSub, lblVer, lblDb, btnUpdate });
+        header.Controls.AddRange(new Control[] { lblLogo, lblSub, lblVer, btnUpdate });
         header.Resize += (s, e) =>
         {
-            lblDb.Location = new Point(Math.Max(220, header.Width - 500), 8);
-            lblDb.Size = new Size(Math.Min(380, header.Width - 240), 30);
-            btnUpdate.Location = new Point(header.Width - 125, 32);
+            btnUpdate.Location = new Point(header.Width - 130, 24);
         };
 
         tabs.ItemSize = new Size(135, 34);

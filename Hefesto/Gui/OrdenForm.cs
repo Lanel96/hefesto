@@ -19,10 +19,16 @@ public class OrdenForm : Form
     public OrdenForm()
     {
         Text = "➕ Nueva Orden - Seleccione vehículo y servicios";
-        Size = new Size(900, 720);
+        Size = new Size(960, 820);
+        MinimumSize = new Size(920, 680);
         StartPosition = FormStartPosition.CenterParent;
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
+        AutoScroll = true;
+        FormBorderStyle = FormBorderStyle.Sizable;
+        MaximizeBox = true;
+        MinimizeBox = true;
+        AutoScaleMode = AutoScaleMode.Dpi;
 
         var pTop = new Panel { Dock = DockStyle.Top, Height = 80, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10) };
         var lblPlaca = new Label { Text = "Vehículo (Placa):", Location = new Point(10, 10), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
@@ -66,17 +72,19 @@ public class OrdenForm : Form
         dgvRepuestos.Dock = DockStyle.Fill;
         pRep.Controls.Add(dgvRepuestos); pRep.Controls.Add(pRepInput); pRep.Controls.Add(lblRep);
 
-        // Bottom
-        var pBottom = new Panel { Dock = DockStyle.Bottom, Height = 85, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10) };
-        txtObs.Location = new Point(10, 10); txtObs.Size = new Size(500, 28);
-        lblTotal.Location = new Point(520, 14); lblTotal.Text = "Total: $0.00";
-        var btnGuardar = new Button { Text = "💾 GUARDAR ORDEN", Location = new Point(680, 10), Size = new Size(180, 38), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
-        var btnCancel = new Button { Text = "Cancelar", Location = new Point(680, 50), Size = new Size(180, 24), FlatStyle = FlatStyle.Flat };
+        // Bottom - altura aumentada a 105 para no cortar en DPI 125% y con AutoScroll
+        var pBottom = new Panel { Dock = DockStyle.Bottom, Height = 105, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(12) };
+        txtObs.Location = new Point(12, 14); txtObs.Size = new Size(460, 30); txtObs.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+        lblTotal.Location = new Point(485, 18); lblTotal.Text = "Total: $0.00"; lblTotal.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        var btnGuardar = new Button { Text = "💾 GUARDAR ORDEN", Location = new Point(720, 10), Size = new Size(190, 42), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+        var btnCancel = new Button { Text = "Cancelar", Location = new Point(720, 60), Size = new Size(190, 28), FlatStyle = FlatStyle.Flat, Anchor = AnchorStyles.Top | AnchorStyles.Right };
         btnCancel.Click += (s, e) => DialogResult = DialogResult.Cancel;
         btnGuardar.Click += (s, e) => Guardar();
         pBottom.Controls.AddRange(new Control[] { txtObs, lblTotal, btnGuardar, btnCancel });
 
-        Controls.Add(pRep); Controls.Add(pSel); Controls.Add(pCat); Controls.Add(lblCat); Controls.Add(pTop); Controls.Add(pBottom);
+        // Orden de Dock: Bottom primero, luego Top en orden inverso para que no se tapen
+        Controls.Add(pBottom);
+        Controls.Add(pRep); Controls.Add(pSel); Controls.Add(pCat); Controls.Add(lblCat); Controls.Add(pTop);
 
         CargarVehiculos(); CargarCatalogo();
     }
