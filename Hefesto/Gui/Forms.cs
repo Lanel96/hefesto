@@ -13,15 +13,70 @@ public class VehiculoForm : Form
     public VehiculoForm(Vehiculo? v)
     {
         Text = v == null ? "Nuevo Vehículo" : $"Editar {v.Placa}";
-        ClientSize = new Size(420, 460); MinimumSize = new Size(440, 500); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; AutoScroll = true; BackColor = Color.White;
-        int y = 15;
-        void Add(string label, Control c) { Controls.Add(new Label { Text = label, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(390, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 58; }
-        Add("Placa *", txtPlaca); Add("Marca *", txtMarca); Add("Modelo *", txtModelo); Add("Año", txtAnio); Add("Cliente *", txtCliente); Add("Teléfono", txtTel);
-        if (v != null) { txtPlaca.Text = v.Placa; txtPlaca.ReadOnly = true; txtPlaca.BackColor = Color.FromArgb(240,240,240); txtMarca.Text = v.Marca; txtModelo.Text = v.Modelo; if (v.Anio.HasValue) txtAnio.Value = v.Anio.Value; txtCliente.Text = v.Cliente; txtTel.Text = v.Telefono; }
-        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 10), Size = new Size(390, 38), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        StartPosition = FormStartPosition.CenterParent;
+        FormBorderStyle = FormBorderStyle.FixedDialog;
+        MaximizeBox = false; MinimizeBox = false;
+        AutoScaleMode = AutoScaleMode.None;
+        BackColor = Color.White;
+        Font = new Font("Segoe UI", 9);
+
+        float dpiScale = 1f;
+        using (var g = CreateGraphics()) dpiScale = g.DpiX / 96f;
+
+        int rowH = (int)Math.Round(48 * dpiScale);
+        int btnH = (int)Math.Round(50 * dpiScale);
+        int pad = (int)Math.Round(16 * dpiScale);
+        int w = (int)Math.Round(440 * dpiScale);
+        int h = (int)Math.Round(500 * dpiScale); // más alto
+        ClientSize = new Size(w, h);
+        MinimumSize = new Size(w, h);
+
+        var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 8, Padding = new Padding(pad), BackColor = Color.White };
+        for (int i = 0; i < 6; i++) main.RowStyles.Add(new RowStyle(SizeType.Absolute, rowH));
+        main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        main.RowStyles.Add(new RowStyle(SizeType.Absolute, btnH));
+
+        void AddRow(string label, Control c, int row)
+        {
+            var p = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Padding = new Padding(0, 6, 0, 0), BackColor = Color.Transparent };
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            var lbl = new Label { Text = label, Dock = DockStyle.Bottom, AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(60, 60, 60) };
+            c.Dock = DockStyle.Fill; c.Font = new Font("Segoe UI", 10); c.Margin = new Padding(0, 2, 0, 0);
+            p.Controls.Add(lbl, 0, 0); p.Controls.Add(c, 1, 0);
+            main.Controls.Add(p, 0, row);
+        }
+
+        AddRow("Placa *", txtPlaca, 0);
+        AddRow("Marca *", txtMarca, 1);
+        AddRow("Modelo *", txtModelo, 2);
+        AddRow("Año", txtAnio, 3);
+        AddRow("Cliente *", txtCliente, 4);
+        AddRow("Teléfono", txtTel, 5);
+
+        if (v != null)
+        {
+            txtPlaca.Text = v.Placa; txtPlaca.ReadOnly = true; txtPlaca.BackColor = Color.FromArgb(240, 240, 240);
+            txtMarca.Text = v.Marca; txtModelo.Text = v.Modelo;
+            if (v.Anio.HasValue) txtAnio.Value = v.Anio.Value;
+            txtCliente.Text = v.Cliente; txtTel.Text = v.Telefono;
+        }
+
+        var btn = new Button { Text = "💾 Guardar", Dock = DockStyle.Fill, BackColor = Color.FromArgb(0, 150, 80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Height = 40 };
         btn.FlatAppearance.BorderSize = 0;
-        btn.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtPlaca.Text) || string.IsNullOrWhiteSpace(txtMarca.Text) || string.IsNullOrWhiteSpace(txtModelo.Text) || string.IsNullOrWhiteSpace(txtCliente.Text)) { MessageBox.Show("Placa, Marca, Modelo y Cliente son obligatorios"); return; } Repos.UpsertVehiculo(new Vehiculo(txtPlaca.Text.Trim().ToUpper(), txtMarca.Text.Trim(), txtModelo.Text.Trim(), (int)txtAnio.Value, txtCliente.Text.Trim(), txtTel.Text.Trim())); DialogResult = DialogResult.OK; };
-        Controls.Add(btn);
+        btn.Click += (s, e) =>
+        {
+            if (string.IsNullOrWhiteSpace(txtPlaca.Text) || string.IsNullOrWhiteSpace(txtMarca.Text) || string.IsNullOrWhiteSpace(txtModelo.Text) || string.IsNullOrWhiteSpace(txtCliente.Text))
+            {
+                MessageBox.Show("Placa, Marca, Modelo y Cliente son obligatorios");
+                return;
+            }
+            Repos.UpsertVehiculo(new Vehiculo(txtPlaca.Text.Trim().ToUpper(), txtMarca.Text.Trim(), txtModelo.Text.Trim(), (int)txtAnio.Value, txtCliente.Text.Trim(), txtTel.Text.Trim()));
+            DialogResult = DialogResult.OK;
+        };
+        main.Controls.Add(btn, 0, 7);
+
+        Controls.Add(main);
     }
 }
 
@@ -36,16 +91,68 @@ public class ServicioForm : Form
     public ServicioForm(Servicio? s)
     {
         Text = s == null ? "Nuevo Servicio" : $"Editar {s.Codigo}";
-        ClientSize = new Size(420, 420); MinimumSize = new Size(440, 460); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; AutoScroll = true; BackColor = Color.White;
+        StartPosition = FormStartPosition.CenterParent;
+        FormBorderStyle = FormBorderStyle.FixedDialog;
+        MaximizeBox = false; MinimizeBox = false;
+        AutoScaleMode = AutoScaleMode.None;
+        BackColor = Color.White;
+        Font = new Font("Segoe UI", 9);
         id = s?.Id ?? 0;
-        int y = 15;
-        void Add(string label, Control c) { Controls.Add(new Label { Text = label, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(390, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 58; }
-        Add("Código *", txtCodigo); Add("Nombre *", txtNombre); Add("Descripción", txtDesc); Add("Precio *", txtPrecio); Add("Duración (min)", txtDur);
+
+        float dpiScale = 1f;
+        using (var g = CreateGraphics()) dpiScale = g.DpiX / 96f;
+
+        int rowH = (int)Math.Round(48 * dpiScale);
+        int btnH = (int)Math.Round(50 * dpiScale);
+        int pad = (int)Math.Round(16 * dpiScale);
+        int w = (int)Math.Round(440 * dpiScale);
+        int h = (int)Math.Round(460 * dpiScale); // más alto
+        ClientSize = new Size(w, h);
+        MinimumSize = new Size(w, h);
+
+        var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 7, Padding = new Padding(pad), BackColor = Color.White };
+        for (int i = 0; i < 5; i++) main.RowStyles.Add(new RowStyle(SizeType.Absolute, rowH));
+        main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        main.RowStyles.Add(new RowStyle(SizeType.Absolute, btnH));
+
+        void AddRow(string label, Control c, int row)
+        {
+            var p = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Padding = new Padding(0, 6, 0, 0), BackColor = Color.Transparent };
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            var lbl = new Label { Text = label, Dock = DockStyle.Bottom, AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(60, 60, 60) };
+            c.Dock = DockStyle.Fill; c.Font = new Font("Segoe UI", 10); c.Margin = new Padding(0, 2, 0, 0);
+            p.Controls.Add(lbl, 0, 0); p.Controls.Add(c, 1, 0);
+            main.Controls.Add(p, 0, row);
+        }
+
+        AddRow("Código *", txtCodigo, 0);
+        AddRow("Nombre *", txtNombre, 1);
+        AddRow("Descripción", txtDesc, 2);
+        AddRow("Precio *", txtPrecio, 3);
+        AddRow("Duración (min)", txtDur, 4);
+
         if (s != null) { txtCodigo.Text = s.Codigo; txtNombre.Text = s.Nombre; txtDesc.Text = s.Descripcion; txtPrecio.Value = s.Precio; txtDur.Value = s.DuracionMin; }
-        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 10), Size = new Size(390, 38), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+
+        var btn = new Button { Text = "💾 Guardar", Dock = DockStyle.Fill, BackColor = Color.FromArgb(0, 150, 80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Height = 40 };
         btn.FlatAppearance.BorderSize = 0;
-        btn.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text)) { MessageBox.Show("Código y Nombre requeridos"); return; } try { Repos.SaveServicio(new Servicio(id, txtCodigo.Text.Trim().ToUpper(), txtNombre.Text.Trim(), txtDesc.Text.Trim(), txtPrecio.Value, (int)txtDur.Value)); DialogResult = DialogResult.OK; } catch (Exception ex) { MessageBox.Show(ex.Message); } };
-        Controls.Add(btn);
+        btn.Click += (s, e) =>
+        {
+            if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("Código y Nombre requeridos");
+                return;
+            }
+            try
+            {
+                Repos.SaveServicio(new Servicio(id, txtCodigo.Text.Trim().ToUpper(), txtNombre.Text.Trim(), txtDesc.Text.Trim(), txtPrecio.Value, (int)txtDur.Value));
+                DialogResult = DialogResult.OK;
+            }
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
+        };
+        main.Controls.Add(btn, 0, 6);
+
+        Controls.Add(main);
     }
 }
 
@@ -59,16 +166,67 @@ public class InventarioForm : Form
     public InventarioForm(InventarioItem? it)
     {
         Text = it == null ? "Nuevo Artículo Inventario" : $"Editar {it.Codigo}";
-        ClientSize = new Size(420, 320); MinimumSize = new Size(440, 360); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; AutoScroll = true; BackColor = Color.White;
+        StartPosition = FormStartPosition.CenterParent;
+        FormBorderStyle = FormBorderStyle.FixedDialog;
+        MaximizeBox = false; MinimizeBox = false;
+        AutoScaleMode = AutoScaleMode.None;
+        BackColor = Color.White;
+        Font = new Font("Segoe UI", 9);
         id = it?.Id ?? 0;
-        int y = 15;
-        void Add(string label, Control c) { Controls.Add(new Label { Text = label, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(390, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 58; }
-        Add("Código *", txtCodigo); Add("Nombre *", txtNombre); Add("Existencia *", txtExist); Add("Precio *", txtPrecio);
+
+        float dpiScale = 1f;
+        using (var g = CreateGraphics()) dpiScale = g.DpiX / 96f;
+
+        int rowH = (int)Math.Round(48 * dpiScale);
+        int btnH = (int)Math.Round(50 * dpiScale);
+        int pad = (int)Math.Round(16 * dpiScale);
+        int w = (int)Math.Round(440 * dpiScale);
+        int h = (int)Math.Round(360 * dpiScale); // más alto
+        ClientSize = new Size(w, h);
+        MinimumSize = new Size(w, h);
+
+        var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 6, Padding = new Padding(pad), BackColor = Color.White };
+        for (int i = 0; i < 4; i++) main.RowStyles.Add(new RowStyle(SizeType.Absolute, rowH));
+        main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        main.RowStyles.Add(new RowStyle(SizeType.Absolute, btnH));
+
+        void AddRow(string label, Control c, int row)
+        {
+            var p = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Padding = new Padding(0, 6, 0, 0), BackColor = Color.Transparent };
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            var lbl = new Label { Text = label, Dock = DockStyle.Bottom, AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(60, 60, 60) };
+            c.Dock = DockStyle.Fill; c.Font = new Font("Segoe UI", 10); c.Margin = new Padding(0, 2, 0, 0);
+            p.Controls.Add(lbl, 0, 0); p.Controls.Add(c, 1, 0);
+            main.Controls.Add(p, 0, row);
+        }
+
+        AddRow("Código *", txtCodigo, 0);
+        AddRow("Nombre *", txtNombre, 1);
+        AddRow("Existencia *", txtExist, 2);
+        AddRow("Precio *", txtPrecio, 3);
+
         if (it != null) { txtCodigo.Text = it.Codigo; txtNombre.Text = it.Nombre; txtExist.Value = it.Existencia; txtPrecio.Value = it.Precio; }
-        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 10), Size = new Size(390, 38), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+
+        var btn = new Button { Text = "💾 Guardar", Dock = DockStyle.Fill, BackColor = Color.FromArgb(0, 150, 80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Height = 40 };
         btn.FlatAppearance.BorderSize = 0;
-        btn.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text)) { MessageBox.Show("Código y Nombre requeridos"); return; } try { Repos.SaveInventario(new InventarioItem(id, txtCodigo.Text.Trim().ToUpper(), txtNombre.Text.Trim(), (int)txtExist.Value, txtPrecio.Value)); DialogResult = DialogResult.OK; } catch (Exception ex) { MessageBox.Show(ex.Message); } };
-        Controls.Add(btn);
+        btn.Click += (s, e) =>
+        {
+            if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MessageBox.Show("Código y Nombre requeridos");
+                return;
+            }
+            try
+            {
+                Repos.SaveInventario(new InventarioItem(id, txtCodigo.Text.Trim().ToUpper(), txtNombre.Text.Trim(), (int)txtExist.Value, txtPrecio.Value));
+                DialogResult = DialogResult.OK;
+            }
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
+        };
+        main.Controls.Add(btn, 0, 5);
+
+        Controls.Add(main);
     }
 }
 
@@ -86,7 +244,6 @@ public class BuscarVehiculoForm : Form
         var btnNuevo = new Button { Text = "➕ Nuevo", Size = new Size(90, 28), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(415, 8) };
         txtPlaca.Location = new Point(10, 8); txtPlaca.Size = new Size(300, 28);
         var lbl = new Label { Text = "Placa:", Location = new Point(10, 12), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
-        // actually lbl not needed
         top.Controls.AddRange(new Control[] { txtPlaca, btnBuscar, btnNuevo });
         var bottom = new Panel { Height = 45, Dock = DockStyle.Bottom, Padding = new Padding(10) };
         var btnSel = new Button { Text = "Seleccionar", Dock = DockStyle.Right, Width = 120, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
@@ -111,8 +268,6 @@ public class BuscarVehiculoForm : Form
             if(MessageBox.Show($"No se encontró placa '{filtro}'. ¿Desea crear un nuevo vehículo?", "No encontrado", MessageBoxButtons.YesNo, MessageBoxIcon.Question)==DialogResult.Yes)
             {
                 using var f=new VehiculoForm(null);
-                // prellenar placa
-                // VehiculoForm no expone, pero podemos cerrar y dejar que usuario cree
                 if(f.ShowDialog()==DialogResult.OK) Buscar();
             }
         }
@@ -123,46 +278,6 @@ public class BuscarVehiculoForm : Form
         var placa = dgv.CurrentRow.Cells["Placa"].Value?.ToString();
         if(placa==null) return;
         Seleccionado = Repos.GetVehiculos(placa).FirstOrDefault(x=>x.Placa==placa);
-        DialogResult = DialogResult.OK;
-    }
-}
-
-public class BuscarInventarioForm : Form
-{
-    public InventarioItem? Seleccionado { get; private set; }
-    TextBox txtFiltro = new() { PlaceholderText = "Buscar por código o nombre...", BorderStyle = BorderStyle.FixedSingle };
-    DataGridView dgv = new() { Dock = DockStyle.Fill, ReadOnly = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.FixedSingle, RowHeadersVisible = false };
-    public BuscarInventarioForm()
-    {
-        Text = "🔍 Buscar en Inventario"; ClientSize = new Size(650, 400); MinimumSize = new Size(650, 400); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; BackColor = Color.White;
-        var top = new Panel { Height = 45, Dock = DockStyle.Top, Padding = new Padding(10) };
-        txtFiltro.Location = new Point(10, 8); txtFiltro.Size = new Size(350, 28);
-        var btnBuscar = new Button { Text = "🔍 Buscar", Size = new Size(90, 28), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(370, 8) };
-        top.Controls.AddRange(new Control[] { txtFiltro, btnBuscar });
-        var bottom = new Panel { Height = 45, Dock = DockStyle.Bottom, Padding = new Padding(10) };
-        var btnSel = new Button { Text = "Seleccionar", Dock = DockStyle.Right, Width = 120, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-        var btnCancel = new Button { Text = "Cancelar", Dock = DockStyle.Right, Width = 90, FlatStyle = FlatStyle.Flat };
-        bottom.Controls.Add(btnSel); bottom.Controls.Add(btnCancel);
-        Controls.Add(dgv); Controls.Add(top); Controls.Add(bottom);
-        txtFiltro.TextChanged += (s,e) => Buscar();
-        btnBuscar.Click += (s,e) => Buscar();
-        dgv.DoubleClick += (s,e) => Seleccionar();
-        btnSel.Click += (s,e) => Seleccionar();
-        btnCancel.Click += (s,e) => DialogResult = DialogResult.Cancel;
-        txtFiltro.KeyDown += (s,e) => { if(e.KeyCode==Keys.Enter) Seleccionar(); };
-        Buscar();
-    }
-    void Buscar()
-    {
-        var list = Repos.GetInventario(txtFiltro.Text.Trim());
-        dgv.DataSource = list.Select(x => new { x.Codigo, x.Nombre, x.Existencia, Precio = x.Precio.ToString("C") }).ToList();
-    }
-    void Seleccionar()
-    {
-        if(dgv.CurrentRow==null) return;
-        var cod = dgv.CurrentRow.Cells["Codigo"].Value?.ToString();
-        if(cod==null) return;
-        Seleccionado = Repos.GetInventarioByCodigo(cod);
         DialogResult = DialogResult.OK;
     }
 }
@@ -189,7 +304,6 @@ public class DetalleOrdenForm : Form
         var tabRep = new TabPage("Repuestos / Garantías");
         var dgvR = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
         dgvR.DataSource = reps.Select(r => new { r.Codigo, r.Nombre, Garantía = r.DiasGarantia + " días", Inicio = r.FechaInicio.ToString("dd/MM/yyyy"), Fin = r.FechaFin.ToString("dd/MM/yyyy"), Estado = r.EstadoGarantia }).ToList();
-        // colorear
         dgvR.DataBindingComplete += (s, e) => { foreach (DataGridViewRow row in dgvR.Rows) { var est = row.Cells["Estado"].Value?.ToString() ?? ""; row.DefaultCellStyle.BackColor = est.StartsWith("EN GARANTÍA") ? Color.FromArgb(220,255,220) : est.StartsWith("GARANTÍA VENCIDA") ? Color.FromArgb(255,220,220) : Color.White; } };
         tabRep.Controls.Add(dgvR);
 
@@ -221,7 +335,6 @@ public class UsuarioForm : Form
         Text = $"Editar Usuario - {username}";
         txtUser.Text = username; txtUser.ReadOnly = true; txtUser.BackColor = Color.FromArgb(240,240,240);
         cmbRol.SelectedItem = rol;
-        // en edición, contraseña es opcional: si se deja vacía, se mantiene
         var lbl = Controls.OfType<Label>().FirstOrDefault(l => l.Text == "Contraseña *");
         if (lbl != null) lbl.Text = "Nueva Contraseña (dejar vacío para mantener)";
     }

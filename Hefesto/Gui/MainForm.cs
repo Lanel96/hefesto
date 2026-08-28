@@ -48,26 +48,38 @@ public class MainForm : Form
 
     public MainForm()
     {
-        Text = "Hefesto - Sistema Taller Mecánico  |  DB: " + Db.DbPath;
+        Text = "Hefesto - Sistema Taller Mecánico";
         WindowState = FormWindowState.Maximized;
         MinimumSize = new Size(1200, 700);
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9);
 
-        // Header - sin leyenda de ruta (petición usuario) y TableLayout para no tapar
-        var header = new Panel { Height = 78, Dock = DockStyle.Fill, BackColor = Color.FromArgb(30, 60, 110) };
-        var lblLogo = new Label { Text = "⚙ HEFESTO", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, AutoSize = true, Location = new Point(15, 12) };
-        var lblSub = new Label { Text = "Gestión de Órdenes • Vehículos • Servicios • Garantías", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(180, 200, 255), AutoSize = true, Location = new Point(16, 36) };
-        var lblVer = new Label { Text = $"v{Updater.CurrentVersion}", Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.FromArgb(255, 230, 100), AutoSize = true, Location = new Point(155, 18) };
+        // Header fijo 78px - usa TableLayoutPanel interno para layout responsivo
+        var header = new Panel { Height = 78, Dock = DockStyle.Top, BackColor = Color.FromArgb(30, 60, 110), Padding = new Padding(16, 8, 16, 8) };
+        var hl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, BackColor = Color.Transparent };
+        hl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        hl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140));
+        hl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130));
+
+        var left = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, BackColor = Color.Transparent, Margin = new Padding(0) };
+        left.RowStyles.Add(new RowStyle(SizeType.Percent, 55));
+        left.RowStyles.Add(new RowStyle(SizeType.Percent, 45));
+        left.Controls.Add(new Label { Text = "⚙ HEFESTO", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, Dock = DockStyle.Bottom, AutoSize = true }, 0, 0);
+        left.Controls.Add(new Label { Text = "Gestión de Órdenes  •  Vehículos  •  Servicios  •  Garantías", Font = new Font("Segoe UI", 8), ForeColor = Color.FromArgb(180, 200, 255), Dock = DockStyle.Top, AutoSize = true }, 0, 1);
+        hl.Controls.Add(left, 0, 0);
+
+        var center = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
+        var lblVer = new Label { Text = $"v{Updater.CurrentVersion}", Font = new Font("Segoe UI", 7, FontStyle.Bold), ForeColor = Color.FromArgb(255, 230, 100), AutoSize = true, Location = new Point(0, 10) };
+        center.Controls.Add(lblVer);
+        hl.Controls.Add(center, 1, 0);
+
         var btnUpdate = new Button { Text = "🔄 Actualizar", Size = new Size(115, 28), BackColor = Color.FromArgb(255, 193, 7), ForeColor = Color.Black, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 8, FontStyle.Bold), Cursor = Cursors.Hand, Anchor = AnchorStyles.Top | AnchorStyles.Right };
         btnUpdate.FlatAppearance.BorderSize = 0;
         btnUpdate.Click += async (s, e) => await CheckUpdatesAsync(false);
-        header.Controls.AddRange(new Control[] { lblLogo, lblSub, lblVer, btnUpdate });
-        header.Resize += (s, e) =>
-        {
-            btnUpdate.Location = new Point(header.Width - 130, 24);
-        };
+        hl.Controls.Add(btnUpdate, 2, 0);
+
+        header.Controls.Add(hl);
 
         tabs.ItemSize = new Size(185, 38);
         tabs.SizeMode = TabSizeMode.Fixed;
@@ -89,7 +101,7 @@ public class MainForm : Form
         tabs.Dock = DockStyle.Fill;
         container.Controls.Add(tabs);
 
-        // Layout sin solape: TableLayout 78px header + resto
+        // Layout sin solape: header 78px fijo + tabs
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2, ColumnCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
         layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 78));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
