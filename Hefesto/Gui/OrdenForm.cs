@@ -70,7 +70,7 @@ public class OrdenForm : Form
         int hToolbar = (int)Math.Round(50 * dpiScale);
         int hTotalBar = (int)Math.Round(45 * dpiScale);
         int hObs = (int)Math.Round(70 * dpiScale);
-        int hBtns = (int)Math.Round(100 * dpiScale); // más alto para botones
+        int hBtns = (int)Math.Round(145 * dpiScale); // más alto para botones
 
         var main = new TableLayoutPanel
         {
@@ -194,9 +194,9 @@ public class OrdenForm : Form
 
         // ===== ROW 5: BOTONES (altura fija, nunca se corta) =====
         int btnH1 = (int)Math.Round(52 * dpiScale);
-        int btnH2 = (int)Math.Round(40 * dpiScale);
+        int btnH2 = (int)Math.Round(44 * dpiScale);
         
-        var pBtnsRow = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(248, 249, 250), Padding = new Padding((int)(12 * dpiScale), (int)(8 * dpiScale), (int)(12 * dpiScale), (int)(8 * dpiScale)) };
+        var pBtnsRow = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(248, 249, 250), Padding = new Padding((int)(12 * dpiScale), (int)(12 * dpiScale), (int)(12 * dpiScale), (int)(12 * dpiScale)) };
         var pBtns = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, BackColor = Color.Transparent };
         pBtns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55));
         pBtns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 15));
@@ -468,8 +468,8 @@ public class ConceptoForm : Form
         _editando = editando;
 
         Text = editando == null ? "Agregar Concepto" : "Editar Concepto";
-        ClientSize = new Size(520, 420);
-        MinimumSize = new Size(520, 420);
+        ClientSize = new Size(520, 500);
+        MinimumSize = new Size(520, 500);
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -486,7 +486,7 @@ public class ConceptoForm : Form
         main.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
         main.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
         main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        main.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
+        main.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));
 
         // Tipo selector (solo si es nuevo)
         if (editando == null)
@@ -564,7 +564,7 @@ public class ConceptoForm : Form
         main.Controls.Add(pGarantia, 0, editando == null ? 5 : 4);
 
         // Botones
-        var pBtns = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Padding = new Padding(0, 12, 0, 0) };
+        var pBtns = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Padding = new Padding(0, 8, 0, 4) };
         pBtns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         pBtns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         var btnGuardar = new Button { Text = editando == null ? "➕  AGREGAR" : "💾  GUARDAR", Dock = DockStyle.Fill, BackColor = Color.FromArgb(0, 150, 80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold), Height = 40 };
