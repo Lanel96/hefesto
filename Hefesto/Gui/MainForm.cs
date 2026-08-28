@@ -138,9 +138,10 @@ public class MainForm : Form
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
         txtFiltroVeh.Size = new Size(260, 30); txtFiltroVeh.Margin = new Padding(0, 5, 8, 5);
         txtFiltroVeh.TextChanged += (s, e) => LoadVehiculos();
-        var btnAdd = MakeBtn("➕ Nuevo / Editar", Color.FromArgb(0, 150, 80), EditarVehiculo); btnAdd.Margin = new Padding(2, 4, 2, 4);
-        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvVeh.CurrentRow == null) return; var placa = dgvVeh.CurrentRow.Cells["Placa"].Value!.ToString()!; if (MessageBox.Show($"¿Eliminar {placa}?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { try { Repos.DeleteVehiculo(placa); LoadVehiculos(); } catch (Exception ex) { MessageBox.Show(ex.Message); } } }); btnDel.Margin = new Padding(2, 4, 2, 4);
-        top.Controls.AddRange(new Control[] { txtFiltroVeh, btnAdd, btnDel });
+        var btnNuevo = MakeBtn("➕ Nuevo", Color.FromArgb(0, 150, 80), () => { using var f = new VehiculoForm(null); if (f.ShowDialog() == DialogResult.OK) LoadVehiculos(); }); btnNuevo.Size = new Size(115, 32); btnNuevo.Margin = new Padding(2, 4, 2, 4);
+        var btnEditar = MakeBtn("✏ Editar", Color.FromArgb(30, 60, 110), () => { if (dgvVeh.CurrentRow == null) { MessageBox.Show("Seleccione un vehículo para editar", "Editar", MessageBoxButtons.OK, MessageBoxIcon.Information); return; } EditarVehiculo(); }); btnEditar.Size = new Size(110, 32); btnEditar.Margin = new Padding(2, 4, 2, 4);
+        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvVeh.CurrentRow == null) return; var placa = dgvVeh.CurrentRow.Cells["Placa"].Value!.ToString()!; if (MessageBox.Show($"¿Eliminar {placa}?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { try { Repos.DeleteVehiculo(placa); LoadVehiculos(); } catch (Exception ex) { MessageBox.Show(ex.Message); } } }); btnDel.Size = new Size(115, 32); btnDel.Margin = new Padding(2, 4, 2, 4);
+        top.Controls.AddRange(new Control[] { txtFiltroVeh, btnNuevo, btnEditar, btnDel });
         p.Controls.Add(dgvVeh); p.Controls.Add(top);
         dgvVeh.DoubleClick += (s, e) => EditarVehiculo();
         return p;
@@ -150,12 +151,13 @@ public class MainForm : Form
     {
         var p = new TabPage("  🔧 CATÁLOGO SERVICIOS  ");
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
-        txtFiltroServ.Size = new Size(260, 32); txtFiltroServ.Margin = new Padding(0, 6, 8, 6);
+        txtFiltroServ.Size = new Size(240, 32); txtFiltroServ.Margin = new Padding(0, 6, 8, 6);
         txtFiltroServ.TextChanged += (s, e) => LoadServicios();
-        var btnAdd = MakeBtn("➕ Nuevo Servicio", Color.FromArgb(0, 150, 80), EditarServicio); btnAdd.Size = new Size(155, 34); btnAdd.Margin = new Padding(2, 4, 2, 4);
-        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvServ.CurrentRow == null) return; var id = Convert.ToInt32(dgvServ.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar servicio?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteServicio(id); LoadServicios(); } }); btnDel.Size = new Size(125, 34); btnDel.Margin = new Padding(2, 4, 2, 4);
-        var lblInfo = new Label { Text = "Define tus precios aquí", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 12, 0, 0) };
-        top.Controls.AddRange(new Control[] { txtFiltroServ, btnAdd, btnDel, lblInfo });
+        var btnNuevo = MakeBtn("➕ Nuevo", Color.FromArgb(0, 150, 80), () => { using var f = new ServicioForm(null); if (f.ShowDialog() == DialogResult.OK) LoadServicios(); }); btnNuevo.Size = new Size(115, 34); btnNuevo.Margin = new Padding(2, 4, 2, 4);
+        var btnEditar = MakeBtn("✏ Editar", Color.FromArgb(30, 60, 110), () => { if (dgvServ.CurrentRow == null) { MessageBox.Show("Seleccione un servicio para editar", "Editar", MessageBoxButtons.OK, MessageBoxIcon.Information); return; } EditarServicio(); }); btnEditar.Size = new Size(110, 34); btnEditar.Margin = new Padding(2, 4, 2, 4);
+        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvServ.CurrentRow == null) return; var id = Convert.ToInt32(dgvServ.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar servicio?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteServicio(id); LoadServicios(); } }); btnDel.Size = new Size(115, 34); btnDel.Margin = new Padding(2, 4, 2, 4);
+        var lblInfo = new Label { Text = "Catálogo vacío: crea tus servicios", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 12, 0, 0) };
+        top.Controls.AddRange(new Control[] { txtFiltroServ, btnNuevo, btnEditar, btnDel, lblInfo });
         p.Controls.Add(dgvServ); p.Controls.Add(top);
         dgvServ.DoubleClick += (s, e) => EditarServicio();
         return p;
