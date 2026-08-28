@@ -49,6 +49,124 @@ public class ServicioForm : Form
     }
 }
 
+public class InventarioForm : Form
+{
+    TextBox txtCodigo = new() { CharacterCasing = CharacterCasing.Upper, BorderStyle = BorderStyle.FixedSingle };
+    TextBox txtNombre = new() { BorderStyle = BorderStyle.FixedSingle };
+    NumericUpDown txtExist = new() { Minimum = 0, Maximum = 100000, Value = 0, BorderStyle = BorderStyle.FixedSingle };
+    NumericUpDown txtPrecio = new() { DecimalPlaces = 2, Maximum = 1000000, Minimum = 0, BorderStyle = BorderStyle.FixedSingle };
+    int id;
+    public InventarioForm(InventarioItem? it)
+    {
+        Text = it == null ? "Nuevo Artículo Inventario" : $"Editar {it.Codigo}";
+        ClientSize = new Size(420, 320); MinimumSize = new Size(440, 360); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; AutoScroll = true; BackColor = Color.White;
+        id = it?.Id ?? 0;
+        int y = 15;
+        void Add(string label, Control c) { Controls.Add(new Label { Text = label, Location = new Point(15, y), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) }); c.Location = new Point(15, y + 18); c.Size = new Size(390, 28); c.Font = new Font("Segoe UI", 10); Controls.Add(c); y += 58; }
+        Add("Código *", txtCodigo); Add("Nombre *", txtNombre); Add("Existencia *", txtExist); Add("Precio *", txtPrecio);
+        if (it != null) { txtCodigo.Text = it.Codigo; txtNombre.Text = it.Nombre; txtExist.Value = it.Existencia; txtPrecio.Value = it.Precio; }
+        var btn = new Button { Text = "💾 Guardar", Location = new Point(15, y + 10), Size = new Size(390, 38), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        btn.FlatAppearance.BorderSize = 0;
+        btn.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text)) { MessageBox.Show("Código y Nombre requeridos"); return; } try { Repos.SaveInventario(new InventarioItem(id, txtCodigo.Text.Trim().ToUpper(), txtNombre.Text.Trim(), (int)txtExist.Value, txtPrecio.Value)); DialogResult = DialogResult.OK; } catch (Exception ex) { MessageBox.Show(ex.Message); } };
+        Controls.Add(btn);
+    }
+}
+
+public class BuscarVehiculoForm : Form
+{
+    public Vehiculo? Seleccionado { get; private set; }
+    TextBox txtPlaca = new() { CharacterCasing = CharacterCasing.Upper, BorderStyle = BorderStyle.FixedSingle, PlaceholderText = "Ingrese placa..." };
+    DataGridView dgv = new() { Dock = DockStyle.Fill, ReadOnly = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.FixedSingle, RowHeadersVisible = false };
+    public BuscarVehiculoForm(string? placaInicial = null)
+    {
+        Text = "🔍 Buscar Vehículo por Placa"; ClientSize = new Size(620, 400); MinimumSize = new Size(620, 400); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; BackColor = Color.White;
+        txtPlaca.Text = placaInicial ?? "";
+        var top = new Panel { Height = 45, Dock = DockStyle.Top, Padding = new Padding(10) };
+        var btnBuscar = new Button { Text = "🔍 Buscar", Size = new Size(90, 28), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(320, 8) };
+        var btnNuevo = new Button { Text = "➕ Nuevo", Size = new Size(90, 28), BackColor = Color.FromArgb(0,150,80), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(415, 8) };
+        txtPlaca.Location = new Point(10, 8); txtPlaca.Size = new Size(300, 28);
+        var lbl = new Label { Text = "Placa:", Location = new Point(10, 12), AutoSize = true, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        // actually lbl not needed
+        top.Controls.AddRange(new Control[] { txtPlaca, btnBuscar, btnNuevo });
+        var bottom = new Panel { Height = 45, Dock = DockStyle.Bottom, Padding = new Padding(10) };
+        var btnSel = new Button { Text = "Seleccionar", Dock = DockStyle.Right, Width = 120, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+        var btnCancel = new Button { Text = "Cancelar", Dock = DockStyle.Right, Width = 90, FlatStyle = FlatStyle.Flat, Margin = new Padding(0,0,8,0) };
+        bottom.Controls.Add(btnSel); bottom.Controls.Add(btnCancel);
+        Controls.Add(dgv); Controls.Add(top); Controls.Add(bottom);
+        dgv.DoubleClick += (s,e) => Seleccionar();
+        btnBuscar.Click += (s,e) => Buscar();
+        btnNuevo.Click += (s,e) => { using var f=new VehiculoForm(null); if(f.ShowDialog()==DialogResult.OK) Buscar(); };
+        btnSel.Click += (s,e) => Seleccionar();
+        btnCancel.Click += (s,e) => DialogResult = DialogResult.Cancel;
+        txtPlaca.KeyDown += (s,e) => { if(e.KeyCode==Keys.Enter) Buscar(); };
+        if(!string.IsNullOrWhiteSpace(placaInicial)) Buscar();
+    }
+    void Buscar()
+    {
+        var filtro = txtPlaca.Text.Trim();
+        var list = string.IsNullOrWhiteSpace(filtro) ? Repos.GetVehiculos() : Repos.GetVehiculos(filtro);
+        dgv.DataSource = list.Select(v => new { v.Placa, v.Marca, v.Modelo, v.Cliente, v.Telefono }).ToList();
+        if(list.Count==0 && !string.IsNullOrWhiteSpace(filtro))
+        {
+            if(MessageBox.Show($"No se encontró placa '{filtro}'. ¿Desea crear un nuevo vehículo?", "No encontrado", MessageBoxButtons.YesNo, MessageBoxIcon.Question)==DialogResult.Yes)
+            {
+                using var f=new VehiculoForm(null);
+                // prellenar placa
+                // VehiculoForm no expone, pero podemos cerrar y dejar que usuario cree
+                if(f.ShowDialog()==DialogResult.OK) Buscar();
+            }
+        }
+    }
+    void Seleccionar()
+    {
+        if(dgv.CurrentRow==null) return;
+        var placa = dgv.CurrentRow.Cells["Placa"].Value?.ToString();
+        if(placa==null) return;
+        Seleccionado = Repos.GetVehiculos(placa).FirstOrDefault(x=>x.Placa==placa);
+        DialogResult = DialogResult.OK;
+    }
+}
+
+public class BuscarInventarioForm : Form
+{
+    public InventarioItem? Seleccionado { get; private set; }
+    TextBox txtFiltro = new() { PlaceholderText = "Buscar por código o nombre...", BorderStyle = BorderStyle.FixedSingle };
+    DataGridView dgv = new() { Dock = DockStyle.Fill, ReadOnly = true, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.FixedSingle, RowHeadersVisible = false };
+    public BuscarInventarioForm()
+    {
+        Text = "🔍 Buscar en Inventario"; ClientSize = new Size(650, 400); MinimumSize = new Size(650, 400); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; AutoScaleMode = AutoScaleMode.Dpi; BackColor = Color.White;
+        var top = new Panel { Height = 45, Dock = DockStyle.Top, Padding = new Padding(10) };
+        txtFiltro.Location = new Point(10, 8); txtFiltro.Size = new Size(350, 28);
+        var btnBuscar = new Button { Text = "🔍 Buscar", Size = new Size(90, 28), BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(370, 8) };
+        top.Controls.AddRange(new Control[] { txtFiltro, btnBuscar });
+        var bottom = new Panel { Height = 45, Dock = DockStyle.Bottom, Padding = new Padding(10) };
+        var btnSel = new Button { Text = "Seleccionar", Dock = DockStyle.Right, Width = 120, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+        var btnCancel = new Button { Text = "Cancelar", Dock = DockStyle.Right, Width = 90, FlatStyle = FlatStyle.Flat };
+        bottom.Controls.Add(btnSel); bottom.Controls.Add(btnCancel);
+        Controls.Add(dgv); Controls.Add(top); Controls.Add(bottom);
+        txtFiltro.TextChanged += (s,e) => Buscar();
+        btnBuscar.Click += (s,e) => Buscar();
+        dgv.DoubleClick += (s,e) => Seleccionar();
+        btnSel.Click += (s,e) => Seleccionar();
+        btnCancel.Click += (s,e) => DialogResult = DialogResult.Cancel;
+        txtFiltro.KeyDown += (s,e) => { if(e.KeyCode==Keys.Enter) Seleccionar(); };
+        Buscar();
+    }
+    void Buscar()
+    {
+        var list = Repos.GetInventario(txtFiltro.Text.Trim());
+        dgv.DataSource = list.Select(x => new { x.Codigo, x.Nombre, x.Existencia, Precio = x.Precio.ToString("C") }).ToList();
+    }
+    void Seleccionar()
+    {
+        if(dgv.CurrentRow==null) return;
+        var cod = dgv.CurrentRow.Cells["Codigo"].Value?.ToString();
+        if(cod==null) return;
+        Seleccionado = Repos.GetInventarioByCodigo(cod);
+        DialogResult = DialogResult.OK;
+    }
+}
+
 public class DetalleOrdenForm : Form
 {
     public DetalleOrdenForm(int ordenId)

@@ -44,20 +44,26 @@ public class OrdenForm : Form
         // 1 - Vehículo
         var pTop = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245,245,245), Padding = new Padding(10), Margin = new Padding(0,0,0,6) };
         var lblPlaca = new Label { Text = "Vehículo (Placa):", Dock = DockStyle.Top, Height = 18, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(30,60,110) };
-        var tblTop = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
-        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 175));
-        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
+        var tblTop = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 4, RowCount = 1, Padding = new Padding(0), Margin = new Padding(0) };
+        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170));
+        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 42));
+        tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 145));
         tblTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        cmbPlaca.Dock = DockStyle.Fill; cmbPlaca.Margin = new Padding(0,0,8,0); cmbPlaca.Font = new Font("Segoe UI", 9.5F);
+        cmbPlaca.Dock = DockStyle.Fill; cmbPlaca.Margin = new Padding(0,0,4,0); cmbPlaca.Font = new Font("Segoe UI", 9.5F);
+        var btnLupa = new Button { Text = "🔍", Dock = DockStyle.Fill, BackColor = Color.FromArgb(255, 193, 7), ForeColor = Color.Black, FlatStyle = FlatStyle.Flat, Margin = new Padding(0,0,6,0), Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+        btnLupa.FlatAppearance.BorderSize = 0;
+        btnLupa.Click += (s, e) => { var placaActual = cmbPlaca.Text?.Trim(); using var f = new BuscarVehiculoForm(placaActual); if (f.ShowDialog() == DialogResult.OK && f.Seleccionado != null) { var vehs = Repos.GetVehiculos(); cmbPlaca.DataSource = vehs; cmbPlaca.DisplayMember = "Placa"; cmbPlaca.ValueMember = "Placa"; cmbPlaca.SelectedItem = vehs.FirstOrDefault(x => x.Placa == f.Seleccionado.Placa); ActualizarCliente(); } };
         var btnNuevoVeh = new Button { Text = "🚗 Nuevo Vehículo", Dock = DockStyle.Fill, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0,0,8,0), Font = new Font("Segoe UI", 8, FontStyle.Bold) };
         btnNuevoVeh.FlatAppearance.BorderSize = 0;
         btnNuevoVeh.Click += (s, e) => { using var f = new VehiculoForm(null); if (f.ShowDialog() == DialogResult.OK) CargarVehiculos(); };
-        txtCliente.Dock = DockStyle.Fill; txtCliente.Margin = new Padding(0); txtCliente.Font = new Font("Segoe UI", 9.5F);
+        txtCliente.Dock = DockStyle.Fill; txtCliente.Margin = new Padding(0); txtCliente.BorderStyle = BorderStyle.FixedSingle;
+        txtCliente.Font = new Font("Segoe UI", 9.5F);
         txtCliente.PlaceholderText = "Cliente / Marca Modelo";
         cmbPlaca.SelectedIndexChanged += (s, e) => ActualizarCliente();
         tblTop.Controls.Add(cmbPlaca, 0, 0);
-        tblTop.Controls.Add(btnNuevoVeh, 1, 0);
-        tblTop.Controls.Add(txtCliente, 2, 0);
+        tblTop.Controls.Add(btnLupa, 1, 0);
+        tblTop.Controls.Add(btnNuevoVeh, 2, 0);
+        tblTop.Controls.Add(txtCliente, 3, 0);
         pTop.Controls.Add(tblTop);
         pTop.Controls.Add(lblPlaca);
 
@@ -70,6 +76,7 @@ public class OrdenForm : Form
         txtFiltro.TextChanged += (s, e) => FiltrarServicios(txtFiltro.Text);
         dgvServicios.Dock = DockStyle.Fill;
         dgvServicios.DoubleClick += (s, e) => AgregarServicio();
+        dgvServicios.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.Handled = true; e.SuppressKeyPress = true; AgregarServicio(); } };
         // placeholder para empty
         pCat.Controls.Add(dgvServicios); pCat.Controls.Add(txtFiltro);
 
@@ -85,15 +92,19 @@ public class OrdenForm : Form
         // 5 - Repuestos
         var pRep = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0), Margin = new Padding(0) };
         var lblRep = new Label { Text = "3️⃣ Repuestos con Garantía — código + nombre + días (opcional)", Dock = DockStyle.Top, Height = 22, Font = new Font("Segoe UI", 8, FontStyle.Bold), ForeColor = Color.FromArgb(150,80,0), Padding = new Padding(6,2,0,0), BackColor = Color.FromArgb(255,245,220) };
-        var pRepInput = new TableLayoutPanel { Dock = DockStyle.Top, Height = 40, ColumnCount = 6, RowCount = 1, Padding = new Padding(0,4,0,4), BackColor = Color.Transparent };
-        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
-        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
-        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 85));
-        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 50));
+        var pRepInput = new TableLayoutPanel { Dock = DockStyle.Top, Height = 40, ColumnCount = 7, RowCount = 1, Padding = new Padding(0,4,0,4), BackColor = Color.Transparent };
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 115));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 36));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
+        pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 55));
         pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
         pRepInput.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
-        var txtCod = new TextBox { PlaceholderText = "Código", Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0,0,6,0) };
-        var txtNom = new TextBox { PlaceholderText = "Nombre repuesto", Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0,0,6,0) };
+        var txtCod = new TextBox { PlaceholderText = "Código", Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0,0,4,0) };
+        var txtNom = new TextBox { PlaceholderText = "Nombre repuesto", Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0,0,4,0) };
+        var btnBuscarInv = new Button { Text = "🔍", Dock = DockStyle.Fill, BackColor = Color.FromArgb(255,193,7), ForeColor = Color.Black, FlatStyle = FlatStyle.Flat, Margin = new Padding(0,0,4,0), Font = new Font("Segoe UI", 8, FontStyle.Bold) };
+        btnBuscarInv.FlatAppearance.BorderSize = 0;
+        btnBuscarInv.Click += (s, e) => { using var f = new BuscarInventarioForm(); if (f.ShowDialog() == DialogResult.OK && f.Seleccionado != null) { txtCod.Text = f.Seleccionado.Codigo; txtNom.Text = f.Seleccionado.Nombre; } };
         var txtDias = new NumericUpDown { Minimum = 1, Maximum = 3650, Value = 90, Dock = DockStyle.Fill, Margin = new Padding(0,0,4,0), BorderStyle = BorderStyle.FixedSingle, TextAlign = HorizontalAlignment.Center };
         var lblDias = new Label { Text = "días", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, AutoSize = false };
         var btnAddRep = new Button { Text = "Agregar", Dock = DockStyle.Fill, BackColor = Color.FromArgb(30,60,110), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Margin = new Padding(0,0,6,0), Font = new Font("Segoe UI", 8, FontStyle.Bold) };
@@ -101,7 +112,8 @@ public class OrdenForm : Form
         btnAddRep.FlatAppearance.BorderSize = 0; btnDelRep.FlatAppearance.BorderSize = 0;
         btnAddRep.Click += (s, e) => { if (string.IsNullOrWhiteSpace(txtCod.Text) || string.IsNullOrWhiteSpace(txtNom.Text)) { MessageBox.Show("Código y nombre requeridos"); return; } repuestos.Add((txtCod.Text.Trim(), txtNom.Text.Trim(), (int)txtDias.Value, DateTime.Now)); RefreshRepuestos(); txtCod.Clear(); txtNom.Clear(); };
         btnDelRep.Click += (s, e) => { if (dgvRepuestos.CurrentRow != null) { repuestos.RemoveAt(dgvRepuestos.CurrentRow.Index); RefreshRepuestos(); } };
-        pRepInput.Controls.Add(txtCod, 0, 0); pRepInput.Controls.Add(txtNom, 1, 0); pRepInput.Controls.Add(txtDias, 2, 0); pRepInput.Controls.Add(lblDias, 3, 0); pRepInput.Controls.Add(btnAddRep, 4, 0); pRepInput.Controls.Add(btnDelRep, 5, 0);
+        pRepInput.Controls.Add(txtCod, 0, 0); pRepInput.Controls.Add(btnBuscarInv, 1, 0); pRepInput.Controls.Add(txtNom, 2, 0); pRepInput.Controls.Add(txtDias, 3, 0); pRepInput.Controls.Add(lblDias, 4, 0); pRepInput.Controls.Add(btnAddRep, 5, 0); pRepInput.Controls.Add(btnDelRep, 6, 0);
+        txtCod.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { var inv = Repos.GetInventarioByCodigo(txtCod.Text.Trim()); if (inv != null) { txtNom.Text = inv.Nombre; txtDias.Focus(); } e.Handled = true; e.SuppressKeyPress = true; } };
         dgvRepuestos.Dock = DockStyle.Fill;
         pRep.Controls.Add(dgvRepuestos); pRep.Controls.Add(pRepInput); pRep.Controls.Add(lblRep);
 

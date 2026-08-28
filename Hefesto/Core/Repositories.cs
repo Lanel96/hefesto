@@ -138,4 +138,33 @@ public static class Repos
         cmd.Parameters.AddWithValue("$u", username); cmd.Parameters.AddWithValue("$h", Db.Hash(password)); cmd.Parameters.AddWithValue("$r", rol); cmd.ExecuteNonQuery();
     }
     public static void DeleteUsuario(int id){ using var c=Db.Open(); using var cmd=c.CreateCommand(); cmd.CommandText="DELETE FROM Usuarios WHERE Id=$id"; cmd.Parameters.AddWithValue("$id", id); cmd.ExecuteNonQuery(); }
+
+    // Inventario
+    public static List<InventarioItem> GetInventario(string? filtro=null)
+    {
+        var list=new List<InventarioItem>();
+        using var c=Db.Open(); using var cmd=c.CreateCommand();
+        if(string.IsNullOrWhiteSpace(filtro)) cmd.CommandText="SELECT Id,Codigo,Nombre,Existencia,Precio FROM Inventario ORDER BY Codigo";
+        else { cmd.CommandText="SELECT Id,Codigo,Nombre,Existencia,Precio FROM Inventario WHERE Codigo LIKE $f OR Nombre LIKE $f ORDER BY Codigo"; cmd.Parameters.AddWithValue("$f",$"%{filtro}%"); }
+        using var r=cmd.ExecuteReader();
+        while(r.Read()) list.Add(new InventarioItem(r.GetInt32(0), r.GetString(1), r.GetString(2), r.GetInt32(3), Convert.ToDecimal(r.GetDouble(4))));
+        return list;
+    }
+    public static InventarioItem? GetInventarioByCodigo(string codigo)
+    {
+        using var c=Db.Open(); using var cmd=c.CreateCommand();
+        cmd.CommandText="SELECT Id,Codigo,Nombre,Existencia,Precio FROM Inventario WHERE Codigo=$c COLLATE NOCASE"; cmd.Parameters.AddWithValue("$c", codigo);
+        using var r=cmd.ExecuteReader(); if(r.Read()) return new InventarioItem(r.GetInt32(0), r.GetString(1), r.GetString(2), r.GetInt32(3), Convert.ToDecimal(r.GetDouble(4)));
+        return null;
+    }
+    public static void SaveInventario(InventarioItem it)
+    {
+        using var c=Db.Open(); using var cmd=c.CreateCommand();
+        if(it.Id==0) cmd.CommandText="INSERT INTO Inventario (Codigo,Nombre,Existencia,Precio) VALUES ($co,$no,$ex,$pr)";
+        else { cmd.CommandText="UPDATE Inventario SET Codigo=$co, Nombre=$no, Existencia=$ex, Precio=$pr WHERE Id=$id"; cmd.Parameters.AddWithValue("$id", it.Id); }
+        cmd.Parameters.AddWithValue("$co", it.Codigo.ToUpper().Trim()); cmd.Parameters.AddWithValue("$no", it.Nombre); cmd.Parameters.AddWithValue("$ex", it.Existencia); cmd.Parameters.AddWithValue("$pr", (double)it.Precio);
+        cmd.ExecuteNonQuery();
+    }
+    public static void DeleteInventario(int id){ using var c=Db.Open(); using var cmd=c.CreateCommand(); cmd.CommandText="DELETE FROM Inventario WHERE Id=$id"; cmd.Parameters.AddWithValue("$id", id); cmd.ExecuteNonQuery(); }
+    public static void AjustarExistencia(string codigo, int delta){ using var c=Db.Open(); using var cmd=c.CreateCommand(); cmd.CommandText="UPDATE Inventario SET Existencia=Existencia+$d WHERE Codigo=$c COLLATE NOCASE"; cmd.Parameters.AddWithValue("$d", delta); cmd.Parameters.AddWithValue("$c", codigo); cmd.ExecuteNonQuery(); }
 }

@@ -14,6 +14,9 @@ public class MainForm : Form
     // Servicios
     DataGridView dgvServ = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, SelectionMode = DataGridViewSelectionMode.FullRowSelect };
     TextBox txtFiltroServ = new() { PlaceholderText = "Buscar código o nombre..." };
+    // Inventario
+    DataGridView dgvInv = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, SelectionMode = DataGridViewSelectionMode.FullRowSelect };
+    TextBox txtFiltroInv = new() { PlaceholderText = "Buscar por código o nombre..." };
     // Bitacora
     DataGridView dgvBit = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, SelectionMode = DataGridViewSelectionMode.FullRowSelect };
     TextBox txtFiltroBit = new() { PlaceholderText = "Buscar repuesto por código/nombre..." };
@@ -74,12 +77,13 @@ public class MainForm : Form
         tabs.TabPages.Add(MakeOrdenesTab());
         tabs.TabPages.Add(MakeVehiculosTab());
         tabs.TabPages.Add(MakeServiciosTab());
+        tabs.TabPages.Add(MakeInventarioTab());
         tabs.TabPages.Add(MakeBitacoraTab());
         tabs.TabPages.Add(MakeUsersTab());
         tabs.TabPages.Add(MakeConfigTab());
 
         // Estilo profesional senior para todas las grillas
-        ConfigureGrid(dgvOrdenes); ConfigureGrid(dgvVeh); ConfigureGrid(dgvServ); ConfigureGrid(dgvBit); ConfigureGrid(dgvUsers);
+        ConfigureGrid(dgvOrdenes); ConfigureGrid(dgvVeh); ConfigureGrid(dgvServ); ConfigureGrid(dgvInv); ConfigureGrid(dgvBit); ConfigureGrid(dgvUsers);
 
         var container = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8, 8, 8, 8) };
         tabs.Dock = DockStyle.Fill;
@@ -98,8 +102,9 @@ public class MainForm : Form
             if (tabs.SelectedIndex == 0) SafeLoad(LoadOrdenes, "Órdenes");
             if (tabs.SelectedIndex == 1) SafeLoad(LoadVehiculos, "Vehículos");
             if (tabs.SelectedIndex == 2) SafeLoad(LoadServicios, "Servicios");
-            if (tabs.SelectedIndex == 3) SafeLoad(LoadBitacora, "Bitácora");
-            if (tabs.SelectedIndex == 4) SafeLoad(LoadUsuarios, "Usuarios");
+            if (tabs.SelectedIndex == 3) SafeLoad(LoadInventario, "Inventario");
+            if (tabs.SelectedIndex == 4) SafeLoad(LoadBitacora, "Bitácora");
+            if (tabs.SelectedIndex == 5) SafeLoad(LoadUsuarios, "Usuarios");
         };
         Shown += async (s, e) => await CheckUpdatesAsync(true);
     }
@@ -110,6 +115,7 @@ public class MainForm : Form
         SafeLoad(LoadOrdenes, "Órdenes");
         SafeLoad(LoadVehiculos, "Vehículos");
         SafeLoad(LoadServicios, "Servicios");
+        SafeLoad(LoadInventario, "Inventario");
         SafeLoad(LoadBitacora, "Bitácora");
         SafeLoad(LoadUsuarios, "Usuarios");
     }
@@ -160,6 +166,22 @@ public class MainForm : Form
         top.Controls.AddRange(new Control[] { txtFiltroServ, btnNuevo, btnEditar, btnDel, lblInfo });
         p.Controls.Add(dgvServ); p.Controls.Add(top);
         dgvServ.DoubleClick += (s, e) => EditarServicio();
+        return p;
+    }
+
+    TabPage MakeInventarioTab()
+    {
+        var p = new TabPage("  📦 INVENTARIO  ");
+        var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(5), BackColor = Color.FromArgb(248,248,248) };
+        txtFiltroInv.Size = new Size(260, 32); txtFiltroInv.Margin = new Padding(0, 6, 8, 6);
+        txtFiltroInv.TextChanged += (s, e) => LoadInventario();
+        var btnNuevo = MakeBtn("➕ Nuevo", Color.FromArgb(0, 150, 80), () => { using var f = new InventarioForm(null); if (f.ShowDialog() == DialogResult.OK) LoadInventario(); }); btnNuevo.Size = new Size(115, 34); btnNuevo.Margin = new Padding(2, 4, 2, 4);
+        var btnEditar = MakeBtn("✏ Editar", Color.FromArgb(30, 60, 110), () => { if (dgvInv.CurrentRow == null) { MessageBox.Show("Seleccione un artículo para editar", "Editar", MessageBoxButtons.OK, MessageBoxIcon.Information); return; } EditarInventario(); }); btnEditar.Size = new Size(110, 34); btnEditar.Margin = new Padding(2, 4, 2, 4);
+        var btnDel = MakeBtn("🗑 Eliminar", Color.FromArgb(180, 40, 40), () => { if (dgvInv.CurrentRow == null) return; var id = Convert.ToInt32(dgvInv.CurrentRow.Cells["Id"].Value); if (MessageBox.Show("¿Eliminar artículo?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes) { Repos.DeleteInventario(id); LoadInventario(); } }); btnDel.Size = new Size(115, 34); btnDel.Margin = new Padding(2, 4, 2, 4);
+        var lblInfo = new Label { Text = "Código | Nombre | Existencia | Precio", ForeColor = Color.Gray, Font = new Font("Segoe UI", 7, FontStyle.Italic), AutoSize = true, Margin = new Padding(10, 12, 0, 0) };
+        top.Controls.AddRange(new Control[] { txtFiltroInv, btnNuevo, btnEditar, btnDel, lblInfo });
+        p.Controls.Add(dgvInv); p.Controls.Add(top);
+        dgvInv.DoubleClick += (s, e) => EditarInventario();
         return p;
     }
 
@@ -261,6 +283,32 @@ public class MainForm : Form
             dgvServ.BackgroundColor = Color.FromArgb(255, 250, 230);
         }
         else dgvServ.BackgroundColor = Color.White;
+    }
+    void LoadInventario()
+    {
+        var data = Repos.GetInventario(txtFiltroInv.Text).Select(x => new { x.Id, x.Codigo, x.Nombre, x.Existencia, Precio = x.Precio.ToString("C") }).ToList();
+        dgvInv.DataSource = data;
+        if (dgvInv.IsHandleCreated)
+        {
+            try
+            {
+                if (dgvInv.Columns["Id"] != null) { dgvInv.Columns["Id"]!.FillWeight = 8; dgvInv.Columns["Id"]!.MinimumWidth = 50; }
+                if (dgvInv.Columns["Codigo"] != null) { dgvInv.Columns["Codigo"]!.FillWeight = 20; dgvInv.Columns["Codigo"]!.MinimumWidth = 90; }
+                if (dgvInv.Columns["Nombre"] != null) { dgvInv.Columns["Nombre"]!.FillWeight = 35; dgvInv.Columns["Nombre"]!.MinimumWidth = 140; }
+                if (dgvInv.Columns["Existencia"] != null) { dgvInv.Columns["Existencia"]!.FillWeight = 17; dgvInv.Columns["Existencia"]!.MinimumWidth = 85; }
+                if (dgvInv.Columns["Precio"] != null) { dgvInv.Columns["Precio"]!.FillWeight = 20; dgvInv.Columns["Precio"]!.MinimumWidth = 90; }
+            } catch { }
+        }
+        if (data.Count == 0 && string.IsNullOrWhiteSpace(txtFiltroInv.Text)) dgvInv.BackgroundColor = Color.FromArgb(255, 250, 230);
+        else dgvInv.BackgroundColor = Color.White;
+    }
+    void EditarInventario()
+    {
+        if (dgvInv.CurrentRow == null) return;
+        int id = Convert.ToInt32(dgvInv.CurrentRow.Cells["Id"].Value);
+        var it = Repos.GetInventario().FirstOrDefault(x => x.Id == id);
+        using var f = new InventarioForm(it);
+        if (f.ShowDialog() == DialogResult.OK) LoadInventario();
     }
     void LoadBitacora()
     {

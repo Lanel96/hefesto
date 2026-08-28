@@ -10,3 +10,4 @@ public record OrdenRepuesto(int Id, int OrdenId, string Codigo, string Nombre, i
     public bool EnGarantia => DateTime.Now.Date <= FechaFin.Date;
 }
 public record Usuario(int Id, string Username, string PasswordHash, string Rol);
+public record InventarioItem(int Id, string Codigo, string Nombre, int Existencia, decimal Precio);

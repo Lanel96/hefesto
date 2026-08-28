@@ -89,8 +89,17 @@ CREATE TABLE IF NOT EXISTS Usuarios (
   PasswordHash TEXT NOT NULL,
   Rol TEXT NOT NULL DEFAULT 'Admin'
 );
+CREATE TABLE IF NOT EXISTS Inventario (
+  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+  Codigo TEXT UNIQUE NOT NULL COLLATE NOCASE,
+  Nombre TEXT NOT NULL,
+  Existencia INTEGER NOT NULL DEFAULT 0,
+  Precio REAL NOT NULL DEFAULT 0
+);
 CREATE INDEX IF NOT EXISTS idx_ordenes_placa ON Ordenes(Placa);
 CREATE INDEX IF NOT EXISTS idx_repuestos_orden ON OrdenRepuestos(OrdenId);
+CREATE INDEX IF NOT EXISTS idx_inventario_codigo ON Inventario(Codigo);
+CREATE INDEX IF NOT EXISTS idx_inventario_nombre ON Inventario(Nombre);
 ";
         using var cmd2 = conn.CreateCommand();
         cmd2.CommandText = sql;
